@@ -16,22 +16,29 @@ Không cần cài đặt, không cần đăng nhập — mở bằng trình duy�
 
 ## Vẽ đường đi thật — bắt buộc phải làm trước khi dùng
 
-Bản đồ không còn đường mặc định nào cả — mọi kết nối giữa 2 điểm chỉ tồn tại sau khi bạn tự vẽ. Cách vẽ:
+Bản đồ không có đường mặc định nào cả — mọi kết nối giữa 2 điểm chỉ tồn tại sau khi bạn tự vẽ. Công cụ vẽ theo kiểu **1 tuyến dài đi qua nhiều điểm, tự tách thành từng đoạn** — giống như bạn đang lần theo 1 con đường thật ngoài đời, không cần chọn "Từ/Đến" trước.
 
 1. Kéo xuống cuối thanh bên, bấm **"⚙ Công cụ quản trị: vẽ đường đi thật"** để mở bảng công cụ.
-2. Chọn 2 điểm ở ô **Từ / Đến** — đây là 2 điểm bạn muốn nối trực tiếp bằng 1 đoạn lối đi thật (không cần vẽ hết mọi cặp điểm, chỉ cần vẽ các đoạn kề nhau; hệ thống sẽ tự ghép nhiều đoạn lại để tìm đường xa hơn).
-3. Bấm **"✎ Bắt đầu vẽ"**, rồi lần lượt **chạm/click vào bản đồ** đúng theo hình dạng lối đi thật giữa 2 điểm (mỗi lần chạm thêm 1 điểm gấp khúc, càng nhiều điểm càng bám sát đường cong thật). Bấm **"↩ Hoàn tác điểm"** nếu chạm nhầm. Nếu đoạn đó thật sự thẳng, có thể bấm "Hoàn tất" ngay mà không cần chạm điểm nào.
-4. Bấm **"✓ Hoàn tất"** để lưu. Đường vừa vẽ hiện ngay trên bản đồ và lưu tạm trong trình duyệt (localStorage) — khoảng cách (mét) cũng tự tính lại từ chính đường vừa vẽ.
-5. Lặp lại cho từng cặp điểm kề nhau khác cho đến khi nối đủ toàn bộ khu nghỉ dưỡng.
-6. Khi xong, bấm **"⇩ Xuất mã"** — một đoạn mã JavaScript hiện ra. **Sao chép**, mở `index.html`, tìm dòng:
+2. Bấm **"✎ Bắt đầu vẽ tuyến"**.
+3. **Chạm đúng vào 1 điểm (chấm tròn)** trên bản đồ để bắt đầu — đây là điểm neo đầu tiên.
+4. Tiếp tục chạm dọc theo đúng hình dạng lối đi thật (mỗi chạm là 1 điểm gấp khúc, hiện chấm nhỏ màu nâu đất). Khi lối đi đi ngang qua 1 điểm khác, **chạm trúng đúng chấm tròn đó** — hệ thống tự nhận ra (hiện chấm lớn màu vàng đồng) và **tự cắt thành 1 đoạn** nối điểm neo trước đó với điểm này, rồi tiếp tục tuyến từ điểm này.
+5. Cứ thế đi hết toàn bộ tuyến đường, chạm qua bao nhiêu điểm neo cũng được — mỗi lần "Hoàn tất" có thể tạo ra nhiều đoạn cùng lúc.
+6. Lỡ chạm nhầm thì bấm **"↩ Hoàn tác điểm"** (xóa điểm chạm gần nhất, kể cả điểm neo). Bấm **"✕ Hủy vẽ"** để bỏ toàn bộ tuyến đang vẽ dở.
+7. Bấm **"✓ Hoàn tất tuyến"** khi xong — các đoạn được lưu tạm vào trình duyệt (localStorage) và hiện ngay trên bản đồ.
+8. Lặp lại bước 2-7 cho từng tuyến đường khác cho đến khi phủ hết khu nghỉ dưỡng.
+9. Khi xong toàn bộ, bấm **"⇩ Xuất mã"** — một đoạn mã JavaScript hiện ra. **Sao chép**, mở `index.html`, tìm dòng:
    ```js
    const CUSTOM_PATHS = {};
    ```
    và **thay thế toàn bộ** bằng đoạn mã vừa sao chép, lưu file, Commit + Push lên GitHub.
 
-**Độ chính xác khi vẽ:** mỗi lần chạm được quy đổi chính xác theo đúng % vị trí trên ảnh bản đồ tại thời điểm đó (không phụ thuộc mức zoom hay đã cuộn màn hình tới đâu) — nên phóng to (nút +) trước khi vẽ những khu vực chi tiết, nhỏ để chạm chính xác hơn.
+**Độ chính xác:** mỗi lần chạm quy đổi đúng theo % vị trí trên ảnh bản đồ tại đúng thời điểm đó, không phụ thuộc mức zoom hay đã cuộn màn hình tới đâu — nên phóng to (nút +) trước khi vẽ khu vực nhỏ, chi tiết để chạm chuẩn hơn. Khi chạm gần 1 điểm có sẵn (trong bán kính ~3% bản đồ), hệ thống tự "dính" đúng vào tọa độ điểm đó thay vì lấy tọa độ chạm thô, nên không lo bị lệch.
 
-⚠️ **Đường vẽ chỉ lưu trong trình duyệt của bạn** — khách khác sẽ không thấy cho đến khi bạn làm xong bước 6 (dán mã vào file và đưa lên GitHub). Công cụ này hiện không có mật khẩu bảo vệ — nên ẩn/gỡ nút "Công cụ quản trị" trước khi đưa link chính thức cho khách, hoặc thêm xác thực nếu cần dùng lâu dài.
+**Xóa dữ liệu:**
+- Xóa 1 đoạn cụ thể: chọn đúng cặp điểm ở mục "Xóa đường đã vẽ" → bấm "🗑 Xóa 1 đoạn (theo cặp điểm)".
+- Xóa sạch toàn bộ (kể cả dữ liệu thử nghiệm cũ còn sót trong trình duyệt): bấm **"🗑 Xóa TOÀN BỘ đường đã vẽ"**.
+
+⚠️ **Đường vẽ chỉ lưu trong trình duyệt của bạn** (localStorage) — khách khác sẽ không thấy cho đến khi bạn làm xong bước 9 (dán mã vào file và đưa lên GitHub). Vì dữ liệu này nằm trong trình duyệt chứ không phải trong code, **nếu thấy bản đồ hiện đường lạ mà bạn không nhớ đã vẽ, nhiều khả năng đó là dữ liệu thử nghiệm cũ còn sót lại** — bấm "Xóa TOÀN BỘ" để làm sạch rồi vẽ lại. Công cụ này hiện không có mật khẩu bảo vệ — nên ẩn/gỡ nút "Công cụ quản trị" trước khi đưa link chính thức cho khách, hoặc thêm xác thực nếu cần dùng lâu dài.
 
 ### Hiệu chỉnh tỉ lệ mét thật
 
