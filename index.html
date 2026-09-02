@@ -291,22 +291,18 @@ const NODES = {
   southwing: {vi:"Tòa Nam",               en:"South Wing",              x:56.2, y:50.9},
 };
 
-const EDGES = [
-  ["entrance","parking",30],["parking","lobby",60],["lobby","spa",40],["spa","kidsclub",35],
-  ["lobby","bar1",50],["bar1","saltpepper",55],["bar1","seastars",45],["seastars","madcow",25],
-  ["saltpepper","meeting",30],["madcow","meeting",25],["meeting","tennis",35],
-  ["seastars","pool",70],["spa","eastwing",30],["eastwing","pool",60],["pool","westwing",60],
-  ["westwing","splash",30],["splash","beach",70],["pool","waterpark",65],
-  ["waterpark","southwing",40],["splash","southwing",90],
-];
-
-/* Đường đi thật do quản trị vẽ tay — mỗi key "a|b" (a<b theo alphabet) chứa mảng waypoint {x,y} theo %.
-   Dán đè object này bằng đoạn mã xuất ra từ nút "Xuất mã" sau khi vẽ xong để publish cho mọi khách. */
+/* Đường đi thật do quản trị tự vẽ tay — đây là NGUỒN DUY NHẤT cho cả hình dạng hiển thị
+   lẫn khả năng kết nối (2 điểm chỉ được coi là "nối nhau" nếu đã có đường vẽ ở đây).
+   Ban đầu để trống = bản đồ không hiện sẵn đường thẳng nào, phải tự vẽ từ đầu.
+   Mỗi key "a|b" (a<b theo alphabet) chứa mảng waypoint {x,y} theo % — có thể là mảng rỗng
+   nếu đó thật sự là 1 đoạn thẳng. Dán đè object này bằng đoạn mã xuất ra từ nút "Xuất mã"
+   sau khi vẽ xong để publish cho mọi khách. */
 const CUSTOM_PATHS = {};
 
-const graph = {};
-Object.keys(NODES).forEach(id => graph[id] = []);
-EDGES.forEach(([a,b,w])=>{ graph[a].push({to:b,w}); graph[b].push({to:a,w}); });
+/* 1 đơn vị bản đồ (theo hệ tọa độ % đã chuẩn hóa 0-1000) ứng với bao nhiêu mét thật.
+   Chỉnh DUY NHẤT con số này nếu quãng đường hiển thị chưa đúng tỉ lệ thực tế —
+   không cần sửa từng đoạn đường như trước. Xem README để đo và hiệu chỉnh. */
+const METERS_PER_UNIT = 0.9;
 
 function pairKey(a,b){ return [a,b].sort().join("|"); }
 function getWaypoints(a,b){
@@ -315,6 +311,24 @@ function getWaypoints(a,b){
   if(!wp) return [NODES[a], NODES[b]];
   const ordered = key.split("|")[0] === a ? wp : [...wp].reverse();
   return [NODES[a], ...ordered, NODES[b]];
+}
+function pathLengthUnits(a,b){
+  const pts = getWaypoints(a,b);
+  let len = 0;
+  for(let i=0;i<pts.length-1;i++) len += Math.hypot(pts[i+1].x-pts[i].x, pts[i+1].y-pts[i].y);
+  return len; // đơn vị % bản đồ
+}
+
+let graph = {};
+function rebuildGraph(){
+  graph = {};
+  Object.keys(NODES).forEach(id => graph[id] = []);
+  Object.keys(CUSTOM_PATHS).forEach(key=>{
+    const [a,b] = key.split("|");
+    const meters = Math.round(pathLengthUnits(a,b) * METERS_PER_UNIT);
+    graph[a].push({to:b,w:meters});
+    graph[b].push({to:a,w:meters});
+  });
 }
 
 /* ---------- 2. Dijkstra ---------- */
@@ -423,7 +437,10 @@ function drawPolylineForEdge(a,b,color,width,dash){
 }
 
 function drawBaseNetwork(){
-  EDGES.forEach(([a,b])=> drawPolylineForEdge(a,b,"#f8f5ec",3,null));
+  Object.keys(CUSTOM_PATHS).forEach(key=>{
+    const [a,b] = key.split("|");
+    drawPolylineForEdge(a,b,"#f8f5ec",3,null);
+  });
 }
 function drawPath(path){
   clearOverlay();
@@ -559,6 +576,7 @@ const drawState = { active:false, a:null, b:null, points:[] };
 let customPaths = {};
 try{ customPaths = JSON.parse(localStorage.getItem("resortCustomPaths") || "{}"); }catch(e){ customPaths = {}; }
 Object.assign(CUSTOM_PATHS, customPaths);
+rebuildGraph();
 
 document.getElementById("adminToggleBtn").addEventListener("click", ()=>{
   adminPanel.classList.toggle("open");
@@ -602,21 +620,25 @@ document.getElementById("drawCancelBtn").addEventListener("click", ()=>{
   clearOverlay(); drawBaseNetwork(); if(lastRoute) drawPath(lastRoute.path);
 });
 document.getElementById("drawFinishBtn").addEventListener("click", ()=>{
-  if(!drawState.active || drawState.points.length===0) return;
+  if(!drawState.active || drawState.a === drawState.b) return;
   const key = pairKey(drawState.a, drawState.b);
   const ordered = key.split("|")[0] === drawState.a ? drawState.points : [...drawState.points].reverse();
   CUSTOM_PATHS[key] = ordered;
   localStorage.setItem("resortCustomPaths", JSON.stringify(CUSTOM_PATHS));
+  rebuildGraph();
   drawState.active=false; drawState.points=[]; updateCursorMode();
   adminNoteEl.textContent = I18N[lang].adminNoteSaved;
-  clearOverlay(); drawBaseNetwork(); if(lastRoute) drawPath(lastRoute.path);
+  lastRoute = null; resultEl.textContent = "";
+  clearOverlay(); drawBaseNetwork();
 });
 document.getElementById("drawClearBtn").addEventListener("click", ()=>{
   const key = pairKey(editFromSel.value, editToSel.value);
   delete CUSTOM_PATHS[key];
   localStorage.setItem("resortCustomPaths", JSON.stringify(CUSTOM_PATHS));
+  rebuildGraph();
   adminNoteEl.textContent = I18N[lang].adminNoteCleared;
-  clearOverlay(); drawBaseNetwork(); if(lastRoute) drawPath(lastRoute.path);
+  lastRoute = null; resultEl.textContent = "";
+  clearOverlay(); drawBaseNetwork();
 });
 document.getElementById("exportBtn").addEventListener("click", ()=>{
   const code = "const CUSTOM_PATHS = " + JSON.stringify(CUSTOM_PATHS, null, 2) + ";";
