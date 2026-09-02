@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Chỉ đường khu nghỉ dưỡng</title>
+<style>
+  :root{
+    --ink:#1c2b22;
+    --paper:#f6f4ee;
+    --line:#c9cabc;
+    --accent:#2f6b4f;
+    --accent2:#d97a3f;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  header{padding:14px 16px 10px;border-bottom:1px solid var(--line);background:var(--card);
+    position:sticky;top:0;z-index:5;}
+  header h1{font-size:17px;margin:0 0 2px;letter-spacing:.2px;}
+  header p{margin:0;font-size:12.5px;color:#5a6a5f;}
+
+  .panel{padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);}
+  .row{display:flex;gap:8px;margin-bottom:8px;}
+  .field{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11.5px;color:#5a6a5f;}
+  select{width:100%;padding:9px 8px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;font-size:14.5px;color:var(--ink);}
+  .swapbtn{align-self:flex-end;border:1px solid var(--line);background:#fff;border-radius:8px;
+    width:38px;height:38px;font-size:16px;cursor:pointer;}
+  .go{width:100%;padding:11px;border:none;border-radius:9px;background:var(--accent);
+    color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+  .go:active{opacity:.85}
+  .result{font-size:13px;color:#3a4a3f;margin-top:8px;min-height:16px;}
+  .result b{color:var(--accent2)}
+
+  .mapwrap{position:relative;width:100%;overflow:auto;background:#0f2a1c;
+    -webkit-overflow-scrolling:touch;}
+  .mapinner{position:relative;width:1697px;max-width:none;}
+  .mapinner img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
+  svg.overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+
+  .node{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;
+    border-radius:50%;background:#fff;border:2px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+    color:var(--accent);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.35);}
+  .node.active{background:var(--accent);color:#fff;}
+  .node.endpoint{background:var(--accent2);border-color:var(--accent2);color:#fff;width:30px;height:30px;font-size:12px;}
+
+  footer{padding:10px 16px 22px;font-size:11px;color:#7a8a7e;text-align:center;}
+  .hint{font-size:11.5px;color:#7a8a7e;padding:0 16px 10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Chỉ đường trong khu nghỉ dưỡng</h1>
+  <p>Chọn điểm xuất phát và điểm đến — hệ thống tự tìm đường ngắn nhất</p>
+</header>
+
+<div class="panel">
+  <div class="row">
+    <div class="field">
+      <label>Điểm xuất phát</label>
+      <select id="fromSel"></select>
+    </div>
+    <button class="swapbtn" id="swapBtn" title="Đổi chiều">⇅</button>
+    <div class="field">
+      <label>Điểm đến</label>
+      <select id="toSel"></select>
+    </div>
+  </div>
+  <button class="go" id="goBtn">Chỉ đường</button>
+  <div class="result" id="result"></div>
+</div>
+
+<div class="hint">Chạm vào chấm tròn trên bản đồ cũng chọn được điểm. Vuốt để xem toàn bản đồ.</div>
+
+<div class="mapwrap" id="mapwrap">
+  <div class="mapinner" id="mapinner">
+    <img src="map.jpg" alt="Bản đồ khu nghỉ dưỡng" id="mapimg">
+    <svg class="overlay" id="overlay" viewBox="0 0 1697 1200" preserveAspectRatio="none"></svg>
+  </div>
+</div>
+
+<footer>Demo minh họa — tọa độ điểm và đường đi là ước lượng, cần hiệu chỉnh lại theo bản đồ thật trước khi dùng chính thức.</footer>
+
+<script>
+/* ---------- 1. Dữ liệu đồ thị: node = điểm, tọa độ theo % ảnh gốc 1697x1200 ---------- */
+const NODES = {
+  entrance:  {label:"Lối vào",              x:93.4, y:13.3},
+  parking:   {label:"Bãi đỗ xe",            x:80.8, y:9.6},
+  lobby:     {label:"1. Quầy lễ tân",       x:79.0, y:22.2},
+  spa:       {label:"7. Fit & Spa",         x:69.8, y:22.8},
+  kidsclub:  {label:"4. CLB trẻ em",        x:70.1, y:14.1},
+  bar1:      {label:"2. Lighthouse Bar",    x:72.5, y:28.1},
+  seastars:  {label:"6. NH Sea Stars",      x:69.8, y:38.2},
+  saltpepper:{label:"3. NH Salt 'N' Pepper",x:74.2, y:40.6},
+  madcow:    {label:"5. NH Mad Cow",        x:78.2, y:42.4},
+  meeting:   {label:"13. Phòng hội nghị",   x:83.1, y:39.6},
+  tennis:    {label:"12. Sân quần vợt",     x:89.5, y:35.0},
+  pool:      {label:"8. Coconutz Bar / Hồ bơi", x:52.3, y:33.9},
+  eastwing:  {label:"Tòa Đông",             x:65.4, y:22.8},
+  westwing:  {label:"Tòa Tây",              x:43.1, y:22.8},
+  splash:    {label:"10. Splashing Hub",    x:40.0, y:34.0},
+  beach:     {label:"11. Beach House",      x:20.4, y:33.2},
+  waterpark: {label:"9. Công viên nước",    x:45.4, y:44.3},
+  southwing: {label:"Tòa Nam",              x:56.2, y:50.9},
+};
+
+/* cạnh nối (đường đi thực tế) + trọng số ước lượng theo mét */
+const EDGES = [
+  ["entrance","parking",30],
+  ["parking","lobby",60],
+  ["lobby","spa",40],
+  ["spa","kidsclub",35],
+  ["lobby","bar1",50],
+  ["bar1","saltpepper",55],
+  ["bar1","seastars",45],
+  ["seastars","madcow",25],
+  ["saltpepper","meeting",30],
+  ["madcow","meeting",25],
+  ["meeting","tennis",35],
+  ["seastars","pool",70],
+  ["spa","eastwing",30],
+  ["eastwing","pool",60],
+  ["pool","westwing",60],
+  ["westwing","splash",30],
+  ["splash","beach",70],
+  ["pool","waterpark",65],
+  ["waterpark","southwing",40],
+  ["splash","southwing",90],
+];
+
+/* ---------- 2. Xây đồ thị 2 chiều ---------- */
+const graph = {};
+Object.keys(NODES).forEach(id => graph[id] = []);
+EDGES.forEach(([a,b,w])=>{
+  graph[a].push({to:b,w});
+  graph[b].push({to:a,w});
+});
+
+/* ---------- 3. Dijkstra ---------- */
+function shortestPath(start,end){
+  const dist = {}, prev = {}, visited = new Set();
+  Object.keys(graph).forEach(id=> dist[id] = Infinity);
+  dist[start] = 0;
+  const queue = new Set(Object.keys(graph));
+  while(queue.size){
+    let u = null, best = Infinity;
+    queue.forEach(id=>{ if(dist[id] < best){ best = dist[id]; u = id; } });
+    if(u === null) break;
+    queue.delete(u);
+    if(u === end) break;
+    graph[u].forEach(({to,w})=>{
+      const alt = dist[u] + w;
+      if(alt < dist[to]){ dist[to] = alt; prev[to] = u; }
+    });
+  }
+  if(dist[end] === Infinity) return null;
+  const path = [end];
+  let cur = end;
+  while(cur !== start){ cur = prev[cur]; path.unshift(cur); }
+  return {path, distance: dist[end]};
+}
+
+/* ---------- 4. Dựng UI ---------- */
+const fromSel = document.getElementById("fromSel");
+const toSel = document.getElementById("toSel");
+const overlay = document.getElementById("overlay");
+const mapinner = document.getElementById("mapinner");
+const resultEl = document.getElementById("result");
+
+Object.entries(NODES).forEach(([id,n])=>{
+  const o1 = document.createElement("option"); o1.value=id; o1.textContent=n.label; fromSel.appendChild(o1);
+  const o2 = document.createElement("option"); o2.value=id; o2.textContent=n.label; toSel.appendChild(o2);
+});
+fromSel.value = "lobby";
+toSel.value = "pool";
+
+// vẽ chấm node trên bản đồ
+Object.entries(NODES).forEach(([id,n])=>{
+  const dot = document.createElement("div");
+  dot.className = "node";
+  dot.id = "dot-"+id;
+  dot.style.left = n.x+"%";
+  dot.style.top = n.y+"%";
+  dot.textContent = "";
+  dot.title = n.label;
+  dot.addEventListener("click", ()=>{
+    // chọn điểm: click 1 lần = điểm xuất phát nếu trống, lần 2 = điểm đến
+    if(!window._picking || window._picking === "from"){
+      fromSel.value = id; window._picking = "to";
+    } else {
+      toSel.value = id; window._picking = "from";
+    }
+    render();
+  });
+  mapinner.appendChild(dot);
+});
+
+function clearOverlay(){ overlay.innerHTML = ""; }
+
+function drawPath(path){
+  clearOverlay();
+  // vẽ toàn bộ cạnh mờ làm nền
+  EDGES.forEach(([a,b])=>{
+    const A = NODES[a], B = NODES[b];
+    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", A.x/100*1697);
+    line.setAttribute("y1", A.y/100*1200);
+    line.setAttribute("x2", B.x/100*1697);
+    line.setAttribute("y2", B.y/100*1200);
+    line.setAttribute("stroke", "#ffffff");
+    line.setAttribute("stroke-opacity", "0.25");
+    line.setAttribute("stroke-width", "4");
+    overlay.appendChild(line);
+  });
+  // vẽ đường đi ngắn nhất nổi bật
+  for(let i=0;i<path.length-1;i++){
+    const A = NODES[path[i]], B = NODES[path[i+1]];
+    const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", A.x/100*1697);
+    line.setAttribute("y1", A.y/100*1200);
+    line.setAttribute("x2", B.x/100*1697);
+    line.setAttribute("y2", B.y/100*1200);
+    line.setAttribute("stroke", "#d97a3f");
+    line.setAttribute("stroke-width", "7");
+    line.setAttribute("stroke-linecap", "round");
+    overlay.appendChild(line);
+  }
+}
+
+function render(){
+  document.querySelectorAll(".node").forEach(d=>d.classList.remove("active","endpoint"));
+  const from = fromSel.value, to = toSel.value;
+  document.getElementById("dot-"+from).classList.add("endpoint");
+  document.getElementById("dot-"+to).classList.add("endpoint");
+}
+
+document.getElementById("goBtn").addEventListener("click", ()=>{
+  const from = fromSel.value, to = toSel.value;
+  if(from === to){ resultEl.textContent = "Hai điểm giống nhau."; clearOverlay(); render(); return; }
+  const res = shortestPath(from, to);
+  if(!res){ resultEl.textContent = "Không tìm được đường đi."; clearOverlay(); return; }
+  drawPath(res.path);
+  document.querySelectorAll(".node").forEach(d=>d.classList.remove("active"));
+  res.path.forEach(id=> document.getElementById("dot-"+id).classList.add("active"));
+  document.getElementById("dot-"+from).classList.add("endpoint");
+  document.getElementById("dot-"+to).classList.add("endpoint");
+  const steps = res.path.map(id=>NODES[id].label).join(" → ");
+  resultEl.innerHTML = `Quãng đường ước tính: <b>${res.distance} m</b><br>${steps}`;
+  // cuộn tới điểm xuất phát
+  const wrap = document.getElementById("mapwrap");
+  const el = document.getElementById("dot-"+from);
+  wrap.scrollTo({
+    left: el.offsetLeft - wrap.clientWidth/2,
+    top: el.offsetTop - wrap.clientHeight/2,
+    behavior:"smooth"
+  });
+});
+
+document.getElementById("swapBtn").addEventListener("click", ()=>{
+  const a = fromSel.value; fromSel.value = toSel.value; toSel.value = a;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
