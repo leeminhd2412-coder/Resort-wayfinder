@@ -1,7 +1,39 @@
 # Resort Wayfinder – Demo
 
-Web app chỉ đường ngắn nhất trong khu nghỉ dưỡng, dựa trên bản đồ có sẵn (`map.jpg`).
+Web app chỉ đường ngắn nhất trong khu nghỉ dưỡng, có định vị GPS và chuyển đổi tiếng Việt/Anh.
 Không cần cài đặt, không cần đăng nhập — mở bằng trình duyệt (kể cả qua quét QR).
+
+## Tính năng
+
+- Tìm đường ngắn nhất giữa 2 điểm, đường đi **luôn bám theo đúng lối đi** được vẽ trên bản đồ (thuật toán Dijkstra chỉ di chuyển theo các cạnh `EDGES` đã khai báo, không cắt ngang qua nhà/hồ).
+- **GPS thật, theo thời gian thực**: bấm "Bắt đầu định vị trực tiếp" — vị trí khách tự động cập nhật liên tục (dùng `watchPosition`), điểm xuất phát và tuyến đường tự vẽ lại mỗi khi khách di chuyển.
+- **GPS ảo**: nếu khách không ở resort (demo, thử nghiệm, hoặc GPS thật báo lỗi/nằm ngoài bản đồ), chuyển sang chế độ "GPS ảo" rồi chạm/click vào bất kỳ đâu trên bản đồ để tự đặt vị trí xuất phát.
+- Chuyển đổi **VI / EN** ở góc trên phải — dịch toàn bộ giao diện và tên điểm.
+- Giao diện responsive: điện thoại hiển thị dạng cuộn dọc (bảng điều khiển trên, bản đồ dưới); máy tính/tablet tự chuyển sang bố cục 2 cột (bảng điều khiển bên trái cố định, bản đồ chiếm phần còn lại, cao vừa màn hình).
+
+## ⚠️ Việc bắt buộc phải làm trước khi dùng thật: hiệu chỉnh GPS
+
+GPS chỉ trả về kinh độ/vĩ độ thật (lat/lng), còn bản đồ là ảnh phẳng nên cần 1 phép quy đổi. Trong `index.html`, tìm khối:
+
+```js
+const GPS_CALIBRATION = {
+  anchor1: { lat: 15.97000, lng: 108.25000, nodeId: "entrance" },
+  anchor2: { lat: 15.96850, lng: 108.24870, nodeId: "beach" },
+};
+```
+
+Đây hiện là **số giả**, cần thay bằng tọa độ thật:
+
+1. Đứng đúng tại vị trí "Lối vào" ngoài đời, mở Google Maps → xem tọa độ GPS hiện tại → ghi lại `lat, lng`.
+2. Làm tương tự tại vị trí "Beach House" (hoặc 1 điểm khác càng xa điểm 1 càng tốt, để phép quy đổi chính xác hơn).
+3. Thay 2 cặp số vào `anchor1` và `anchor2`.
+
+Cách quy đổi hiện dùng phép nội suy tuyến tính đơn giản (không xoay bản đồ) — đủ dùng cho bản đồ gần như thẳng hướng Bắc-Nam/Đông-Tây. Nếu bản đồ bị xoay lệch nhiều so với hướng thật, cần nâng cấp lên phép biến đổi có xoay (similarity transform) để chính xác hơn.
+
+## Thêm điểm / đường đi mới
+
+- Thêm 1 điểm: thêm dòng vào `NODES` với id, tên tiếng Việt (`vi`), tên tiếng Anh (`en`), tọa độ `x`,`y` (% theo ảnh `map.jpg`, ảnh gốc 1697×1200px).
+- Nối đường đi: thêm dòng vào `EDGES`: `["id_a","id_b", khoảng_cách_mét]`.
 
 ## Chạy thử ở máy
 
@@ -10,30 +42,13 @@ python3 -m http.server 8000
 # mở http://localhost:8000
 ```
 
-## Cách hoạt động
+## Đưa lên GitHub Pages
 
-- `NODES` trong `index.html`: danh sách điểm trên bản đồ, tọa độ tính theo % kích thước ảnh gốc (1697×1200px).
-- `EDGES`: các đoạn đường nối giữa 2 điểm + trọng số (mét ước lượng).
-- Thuật toán Dijkstra tìm đường ngắn nhất giữa 2 điểm được chọn, vẽ đè lên bản đồ bằng SVG.
-
-**Lưu ý:** tọa độ và trọng số hiện là ước lượng bằng mắt — cần đo lại chính xác theo bản đồ thật (đo khoảng cách pixel so với 1 đoạn đã biết chiều dài thật) trước khi dùng chính thức cho khách.
-
-## Đưa lên GitHub Pages (miễn phí, có QR truy cập)
-
-```bash
-git init
-git add .
-git commit -m "Resort wayfinder demo"
-git branch -M main
-git remote add origin https://github.com/<tên-bạn>/<tên-repo>.git
-git push -u origin main
-```
-
-Sau đó vào **Settings → Pages** của repo, chọn branch `main`, thư mục `/ (root)` → Save.
-Trang sẽ chạy tại `https://<tên-bạn>.github.io/<tên-repo>/`. Dùng link đó tạo mã QR (ví dụ tại qr-code-generator.com) để khách quét.
+Xem hướng dẫn chi tiết đã trao đổi trong lần triển khai trước — tóm tắt: đưa 3 file (index.html, map.jpg, README.md) vào repo → Commit → Publish → Settings → Pages → chọn branch main, `/ (root)` → Save.
 
 ## Việc cần làm tiếp
 
-- Hiệu chỉnh lại tọa độ node + đường đi cho khớp bản đồ thật.
-- Thêm các phòng villa/cabana cụ thể nếu cần chỉ đường tới từng phòng.
-- Cân nhắc thêm định vị GPS ngoài trời và bản PWA để dùng offline.
+- Đo lại tọa độ node + trọng số đường đi cho khớp bản đồ thật (hiện là ước lượng bằng mắt).
+- Hiệu chỉnh `GPS_CALIBRATION` bằng tọa độ GPS đo thật tại 2 điểm trên bản đồ.
+- Thêm villa/cabana cụ thể nếu cần chỉ đường tới từng phòng.
+- Cân nhắc bản PWA để dùng offline khi mạng yếu.

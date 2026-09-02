@@ -11,33 +11,70 @@
     --line:#c9cabc;
     --accent:#2f6b4f;
     --accent2:#d97a3f;
+    --gps:#3576d9;
+    --virtual:#9b59b6;
     --card:#ffffff;
+    --sidebar-w:360px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);height:100%;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  header{padding:14px 16px 10px;border-bottom:1px solid var(--line);background:var(--card);
-    position:sticky;top:0;z-index:5;}
-  header h1{font-size:17px;margin:0 0 2px;letter-spacing:.2px;}
-  header p{margin:0;font-size:12.5px;color:#5a6a5f;}
 
-  .panel{padding:12px 16px;background:var(--card);border-bottom:1px solid var(--line);}
+  .app{display:flex;flex-direction:column;min-height:100vh;}
+  @media (min-width:880px){
+    .app{flex-direction:row;height:100vh;}
+    .sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;overflow-y:auto;
+      border-right:1px solid var(--line);border-bottom:none;}
+    .mapwrap{flex:1;height:100vh;}
+  }
+
+  .sidebar{background:var(--card);border-bottom:1px solid var(--line);display:flex;flex-direction:column;}
+
+  header{padding:14px 84px 8px 16px;border-bottom:1px solid var(--line);position:relative;}
+  header h1{font-size:16.5px;margin:0 0 2px;letter-spacing:.2px;}
+  header p{margin:0;font-size:12px;color:#5a6a5f;line-height:1.4;}
+
+  .langswitch{position:absolute;top:12px;right:14px;display:flex;border:1px solid var(--line);
+    border-radius:999px;overflow:hidden;background:#fff;z-index:2;}
+  .langswitch button{border:none;background:transparent;padding:6px 11px;font-size:12px;
+    font-weight:600;cursor:pointer;color:#6a7a6f;}
+  .langswitch button.active{background:var(--accent);color:#fff;}
+
+  .panel{padding:12px 16px;border-bottom:1px solid var(--line);}
+  .modeswitch{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;
+    background:#fff;margin-bottom:10px;}
+  .modeswitch button{flex:1;border:none;background:transparent;padding:8px 6px;font-size:12.5px;
+    font-weight:600;cursor:pointer;color:#6a7a6f;}
+  .modeswitch button.active.real{background:var(--gps);color:#fff;}
+  .modeswitch button.active.virtual{background:var(--virtual);color:#fff;}
+
   .row{display:flex;gap:8px;margin-bottom:8px;}
   .field{flex:1;display:flex;flex-direction:column;gap:4px;}
   .field label{font-size:11.5px;color:#5a6a5f;}
   select{width:100%;padding:9px 8px;border-radius:8px;border:1px solid var(--line);
-    background:#fff;font-size:14.5px;color:var(--ink);}
+    background:#fff;font-size:14px;color:var(--ink);}
   .swapbtn{align-self:flex-end;border:1px solid var(--line);background:#fff;border-radius:8px;
-    width:38px;height:38px;font-size:16px;cursor:pointer;}
+    width:38px;height:38px;font-size:16px;cursor:pointer;flex:none;}
+
+  .gpsbtn{width:100%;padding:11px;border:1px solid var(--gps);border-radius:9px;background:#fff;
+    color:var(--gps);font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:8px;}
+  .gpsbtn.tracking{background:var(--gps);color:#fff;}
   .go{width:100%;padding:11px;border:none;border-radius:9px;background:var(--accent);
     color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
-  .go:active{opacity:.85}
-  .result{font-size:13px;color:#3a4a3f;margin-top:8px;min-height:16px;}
+  .go:active,.gpsbtn:active{opacity:.85}
+
+  .result{font-size:13px;color:#3a4a3f;margin-top:10px;min-height:16px;}
   .result b{color:var(--accent2)}
+  .gpsnote{font-size:11.5px;color:#8a7a5f;margin-top:6px;line-height:1.4;}
+  .virtualhint{font-size:11.5px;color:var(--virtual);margin-top:6px;line-height:1.4;display:none;}
+
+  .hint{font-size:11px;color:#7a8a7e;padding:10px 16px;}
+  footer{padding:6px 16px 16px;font-size:10.5px;color:#7a8a7e;line-height:1.4;}
 
   .mapwrap{position:relative;width:100%;overflow:auto;background:#0f2a1c;
     -webkit-overflow-scrolling:touch;}
-  .mapinner{position:relative;width:1697px;max-width:none;}
+  .mapinner{position:relative;width:1697px;max-width:none;cursor:default;}
+  .mapinner.pickmode{cursor:crosshair;}
   .mapinner img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
   svg.overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
 
@@ -48,102 +85,154 @@
   .node.active{background:var(--accent);color:#fff;}
   .node.endpoint{background:var(--accent2);border-color:var(--accent2);color:#fff;width:30px;height:30px;font-size:12px;}
 
-  footer{padding:10px 16px 22px;font-size:11px;color:#7a8a7e;text-align:center;}
-  .hint{font-size:11.5px;color:#7a8a7e;padding:0 16px 10px;}
+  .gpsdot{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;
+    border-radius:50%;background:var(--gps);border:3px solid #fff;
+    box-shadow:0 0 0 6px rgba(53,118,217,.35);transition:left .4s linear, top .4s linear;}
+  .gpsdot.virtual{background:var(--virtual);box-shadow:0 0 0 6px rgba(155,89,182,.35);}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Chỉ đường trong khu nghỉ dưỡng</h1>
-  <p>Chọn điểm xuất phát và điểm đến — hệ thống tự tìm đường ngắn nhất</p>
-</header>
+<div class="app">
+  <div class="sidebar">
+    <header>
+      <div class="langswitch" id="langswitch">
+        <button data-lang="vi" id="btnVi">VI</button>
+        <button data-lang="en" id="btnEn">EN</button>
+      </div>
+      <h1 id="hTitle"></h1>
+      <p id="hSubtitle"></p>
+    </header>
 
-<div class="panel">
-  <div class="row">
-    <div class="field">
-      <label>Điểm xuất phát</label>
-      <select id="fromSel"></select>
+    <div class="panel">
+      <div class="modeswitch" id="modeswitch">
+        <button data-mode="real" id="btnReal"></button>
+        <button data-mode="virtual" id="btnVirtual"></button>
+      </div>
+
+      <button class="gpsbtn" id="gpsBtn"></button>
+      <div class="virtualhint" id="virtualHint"></div>
+
+      <div class="row">
+        <div class="field">
+          <label id="lblFrom"></label>
+          <select id="fromSel"></select>
+        </div>
+        <button class="swapbtn" id="swapBtn" title="⇅">⇅</button>
+        <div class="field">
+          <label id="lblTo"></label>
+          <select id="toSel"></select>
+        </div>
+      </div>
+
+      <button class="go" id="goBtn"></button>
+      <div class="result" id="result"></div>
+      <div class="gpsnote" id="gpsNote"></div>
     </div>
-    <button class="swapbtn" id="swapBtn" title="Đổi chiều">⇅</button>
-    <div class="field">
-      <label>Điểm đến</label>
-      <select id="toSel"></select>
+
+    <div class="hint" id="hint"></div>
+    <footer id="footerText"></footer>
+  </div>
+
+  <div class="mapwrap" id="mapwrap">
+    <div class="mapinner" id="mapinner">
+      <img src="map.jpg" alt="map" id="mapimg">
+      <svg class="overlay" id="overlay" viewBox="0 0 1697 1200" preserveAspectRatio="none"></svg>
     </div>
   </div>
-  <button class="go" id="goBtn">Chỉ đường</button>
-  <div class="result" id="result"></div>
 </div>
-
-<div class="hint">Chạm vào chấm tròn trên bản đồ cũng chọn được điểm. Vuốt để xem toàn bản đồ.</div>
-
-<div class="mapwrap" id="mapwrap">
-  <div class="mapinner" id="mapinner">
-    <img src="map.jpg" alt="Bản đồ khu nghỉ dưỡng" id="mapimg">
-    <svg class="overlay" id="overlay" viewBox="0 0 1697 1200" preserveAspectRatio="none"></svg>
-  </div>
-</div>
-
-<footer>Demo minh họa — tọa độ điểm và đường đi là ước lượng, cần hiệu chỉnh lại theo bản đồ thật trước khi dùng chính thức.</footer>
 
 <script>
-/* ---------- 1. Dữ liệu đồ thị: node = điểm, tọa độ theo % ảnh gốc 1697x1200 ---------- */
+/* ---------- 0. i18n ---------- */
+const I18N = {
+  vi: {
+    title: "Chỉ đường trong khu nghỉ dưỡng",
+    subtitle: "Vị trí của bạn tự động cập nhật theo thời gian thực và tuyến đường luôn bám theo lối đi trên bản đồ.",
+    fromLabel: "Điểm xuất phát",
+    toLabel: "Điểm đến",
+    goBtn: "Chỉ đường",
+    hint: "Chạm vào chấm tròn trên bản đồ cũng chọn được điểm. Kéo để xem toàn bản đồ.",
+    footer: "Demo minh họa — tọa độ điểm, đường đi và định vị GPS là ước lượng, cần hiệu chỉnh theo tọa độ thật (xem README).",
+    sameNode: "Hai điểm giống nhau.",
+    noPath: "Không tìm được đường đi.",
+    distancePrefix: "Quãng đường ước tính:",
+    modeReal: "📡 GPS thật",
+    modeVirtual: "🖈 GPS ảo (đặt tay)",
+    liveStart: "▶ Bắt đầu định vị trực tiếp",
+    liveStop: "⏹ Dừng định vị",
+    gpsSearching: "Đang xác định vị trí…",
+    gpsError: "Không lấy được vị trí GPS. Hãy cho phép quyền vị trí, hoặc chuyển sang chế độ GPS ảo.",
+    gpsUnsupported: "Trình duyệt này không hỗ trợ định vị GPS — dùng chế độ GPS ảo bên dưới.",
+    liveMatched: n => "Đang theo dõi trực tiếp — gần nhất: " + n,
+    virtualHintText: "Chạm hoặc bấm chuột vào bất kỳ vị trí nào trên bản đồ để đặt vị trí ảo của bạn ở đó.",
+    virtualMatched: n => "Vị trí ảo — gần nhất: " + n,
+    offSite: "Vị trí của bạn có vẻ ở ngoài khu vực bản đồ. Đã chuyển sang chế độ GPS ảo — hãy chạm vào bản đồ để đặt điểm xuất phát."
+  },
+  en: {
+    title: "Resort Wayfinding",
+    subtitle: "Your position updates automatically in real time, and the route always follows the marked walkways.",
+    fromLabel: "Starting point",
+    toLabel: "Destination",
+    goBtn: "Get directions",
+    hint: "You can also tap a dot on the map to pick a point. Drag to see the full map.",
+    footer: "Demo only — coordinates, paths and GPS positioning are estimates and need calibration against real-world data (see README).",
+    sameNode: "Both points are the same.",
+    noPath: "No route found.",
+    distancePrefix: "Estimated distance:",
+    modeReal: "📡 Real GPS",
+    modeVirtual: "🖈 Virtual GPS (manual)",
+    liveStart: "▶ Start live tracking",
+    liveStop: "⏹ Stop tracking",
+    gpsSearching: "Locating you…",
+    gpsError: "Couldn't get your GPS location. Allow location access, or switch to virtual GPS mode.",
+    gpsUnsupported: "This browser doesn't support GPS — use virtual GPS mode below.",
+    liveMatched: n => "Live tracking — nearest point: " + n,
+    virtualHintText: "Tap or click anywhere on the map to place your virtual position there.",
+    virtualMatched: n => "Virtual position — nearest point: " + n,
+    offSite: "Your location looks like it's outside the map area. Switched to virtual GPS mode — tap the map to set your starting point."
+  }
+};
+let lang = "vi";
+let mode = "real"; // "real" | "virtual"
+
+/* ---------- 1. Nodes & edges ---------- */
 const NODES = {
-  entrance:  {label:"Lối vào",              x:93.4, y:13.3},
-  parking:   {label:"Bãi đỗ xe",            x:80.8, y:9.6},
-  lobby:     {label:"1. Quầy lễ tân",       x:79.0, y:22.2},
-  spa:       {label:"7. Fit & Spa",         x:69.8, y:22.8},
-  kidsclub:  {label:"4. CLB trẻ em",        x:70.1, y:14.1},
-  bar1:      {label:"2. Lighthouse Bar",    x:72.5, y:28.1},
-  seastars:  {label:"6. NH Sea Stars",      x:69.8, y:38.2},
-  saltpepper:{label:"3. NH Salt 'N' Pepper",x:74.2, y:40.6},
-  madcow:    {label:"5. NH Mad Cow",        x:78.2, y:42.4},
-  meeting:   {label:"13. Phòng hội nghị",   x:83.1, y:39.6},
-  tennis:    {label:"12. Sân quần vợt",     x:89.5, y:35.0},
-  pool:      {label:"8. Coconutz Bar / Hồ bơi", x:52.3, y:33.9},
-  eastwing:  {label:"Tòa Đông",             x:65.4, y:22.8},
-  westwing:  {label:"Tòa Tây",              x:43.1, y:22.8},
-  splash:    {label:"10. Splashing Hub",    x:40.0, y:34.0},
-  beach:     {label:"11. Beach House",      x:20.4, y:33.2},
-  waterpark: {label:"9. Công viên nước",    x:45.4, y:44.3},
-  southwing: {label:"Tòa Nam",              x:56.2, y:50.9},
+  entrance:  {vi:"Lối vào",               en:"Entrance",                x:93.4, y:13.3},
+  parking:   {vi:"Bãi đỗ xe",             en:"Parking",                 x:80.8, y:9.6},
+  lobby:     {vi:"1. Quầy lễ tân",        en:"1. Reception",            x:79.0, y:22.2},
+  spa:       {vi:"7. Fit & Spa",          en:"7. Fit & Spa",            x:69.8, y:22.8},
+  kidsclub:  {vi:"4. CLB trẻ em",         en:"4. Kids Club",            x:70.1, y:14.1},
+  bar1:      {vi:"2. Lighthouse Bar",     en:"2. Lighthouse Bar",       x:72.5, y:28.1},
+  seastars:  {vi:"6. NH Sea Stars",       en:"6. Sea Stars Restaurant", x:69.8, y:38.2},
+  saltpepper:{vi:"3. NH Salt 'N' Pepper", en:"3. Salt 'N' Pepper",      x:74.2, y:40.6},
+  madcow:    {vi:"5. NH Mad Cow",         en:"5. Mad Cow Restaurant",   x:78.2, y:42.4},
+  meeting:   {vi:"13. Phòng hội nghị",    en:"13. Conference Room",     x:83.1, y:39.6},
+  tennis:    {vi:"12. Sân quần vợt",      en:"12. Tennis Court",        x:89.5, y:35.0},
+  pool:      {vi:"8. Coconutz Bar / Hồ bơi", en:"8. Coconutz Bar / Pool", x:52.3, y:33.9},
+  eastwing:  {vi:"Tòa Đông",              en:"East Wing",               x:65.4, y:22.8},
+  westwing:  {vi:"Tòa Tây",               en:"West Wing",               x:43.1, y:22.8},
+  splash:    {vi:"10. Splashing Hub",     en:"10. Splashing Hub",       x:40.0, y:34.0},
+  beach:     {vi:"11. Beach House",       en:"11. Beach House",         x:20.4, y:33.2},
+  waterpark: {vi:"9. Công viên nước",     en:"9. Water Park",           x:45.4, y:44.3},
+  southwing: {vi:"Tòa Nam",               en:"South Wing",              x:56.2, y:50.9},
 };
 
-/* cạnh nối (đường đi thực tế) + trọng số ước lượng theo mét */
 const EDGES = [
-  ["entrance","parking",30],
-  ["parking","lobby",60],
-  ["lobby","spa",40],
-  ["spa","kidsclub",35],
-  ["lobby","bar1",50],
-  ["bar1","saltpepper",55],
-  ["bar1","seastars",45],
-  ["seastars","madcow",25],
-  ["saltpepper","meeting",30],
-  ["madcow","meeting",25],
-  ["meeting","tennis",35],
-  ["seastars","pool",70],
-  ["spa","eastwing",30],
-  ["eastwing","pool",60],
-  ["pool","westwing",60],
-  ["westwing","splash",30],
-  ["splash","beach",70],
-  ["pool","waterpark",65],
-  ["waterpark","southwing",40],
-  ["splash","southwing",90],
+  ["entrance","parking",30],["parking","lobby",60],["lobby","spa",40],["spa","kidsclub",35],
+  ["lobby","bar1",50],["bar1","saltpepper",55],["bar1","seastars",45],["seastars","madcow",25],
+  ["saltpepper","meeting",30],["madcow","meeting",25],["meeting","tennis",35],
+  ["seastars","pool",70],["spa","eastwing",30],["eastwing","pool",60],["pool","westwing",60],
+  ["westwing","splash",30],["splash","beach",70],["pool","waterpark",65],
+  ["waterpark","southwing",40],["splash","southwing",90],
 ];
 
-/* ---------- 2. Xây đồ thị 2 chiều ---------- */
 const graph = {};
 Object.keys(NODES).forEach(id => graph[id] = []);
-EDGES.forEach(([a,b,w])=>{
-  graph[a].push({to:b,w});
-  graph[b].push({to:a,w});
-});
+EDGES.forEach(([a,b,w])=>{ graph[a].push({to:b,w}); graph[b].push({to:a,w}); });
 
-/* ---------- 3. Dijkstra ---------- */
+/* ---------- 2. Dijkstra ---------- */
 function shortestPath(start,end){
-  const dist = {}, prev = {}, visited = new Set();
+  const dist = {}, prev = {};
   Object.keys(graph).forEach(id=> dist[id] = Infinity);
   dist[start] = 0;
   const queue = new Set(Object.keys(graph));
@@ -165,37 +254,69 @@ function shortestPath(start,end){
   return {path, distance: dist[end]};
 }
 
-/* ---------- 4. Dựng UI ---------- */
+/* ---------- 3. GPS calibration (⚠️ số giả — xem README để thay bằng tọa độ thật) ---------- */
+const GPS_CALIBRATION = {
+  anchor1: { lat: 15.97000, lng: 108.25000, nodeId: "entrance" },
+  anchor2: { lat: 15.96850, lng: 108.24870, nodeId: "beach" },
+};
+function gpsToXY(lat, lng){
+  const a1 = GPS_CALIBRATION.anchor1, a2 = GPS_CALIBRATION.anchor2;
+  const n1 = NODES[a1.nodeId], n2 = NODES[a2.nodeId];
+  const tx = (lng - a1.lng) / (a2.lng - a1.lng);
+  const ty = (lat - a1.lat) / (a2.lat - a1.lat);
+  return { x: n1.x + tx * (n2.x - n1.x), y: n1.y + ty * (n2.y - n1.y) };
+}
+function nearestNode(x, y){
+  let best = null, bestD = Infinity;
+  Object.entries(NODES).forEach(([id,n])=>{
+    const d = Math.hypot(n.x - x, n.y - y);
+    if(d < bestD){ bestD = d; best = id; }
+  });
+  return best;
+}
+function isOnMap(x,y){ return x > -25 && x < 125 && y > -25 && y < 125; }
+
+/* ---------- 4. UI wiring ---------- */
 const fromSel = document.getElementById("fromSel");
 const toSel = document.getElementById("toSel");
 const overlay = document.getElementById("overlay");
 const mapinner = document.getElementById("mapinner");
+const mapimg = document.getElementById("mapimg");
 const resultEl = document.getElementById("result");
+const gpsNoteEl = document.getElementById("gpsNote");
+const gpsBtn = document.getElementById("gpsBtn");
+const virtualHintEl = document.getElementById("virtualHint");
+let lastRoute = null;
+let gpsDotEl = null;
+let watchId = null;
+let liveTracking = false;
 
-Object.entries(NODES).forEach(([id,n])=>{
-  const o1 = document.createElement("option"); o1.value=id; o1.textContent=n.label; fromSel.appendChild(o1);
-  const o2 = document.createElement("option"); o2.value=id; o2.textContent=n.label; toSel.appendChild(o2);
-});
-fromSel.value = "lobby";
-toSel.value = "pool";
+function buildOptions(){
+  const fromVal = fromSel.value, toVal = toSel.value;
+  fromSel.innerHTML = ""; toSel.innerHTML = "";
+  Object.entries(NODES).forEach(([id,n])=>{
+    const o1 = document.createElement("option"); o1.value=id; o1.textContent=n[lang]; fromSel.appendChild(o1);
+    const o2 = document.createElement("option"); o2.value=id; o2.textContent=n[lang]; toSel.appendChild(o2);
+  });
+  fromSel.value = fromVal || "lobby";
+  toSel.value = toVal || "pool";
+}
 
-// vẽ chấm node trên bản đồ
 Object.entries(NODES).forEach(([id,n])=>{
   const dot = document.createElement("div");
   dot.className = "node";
   dot.id = "dot-"+id;
   dot.style.left = n.x+"%";
   dot.style.top = n.y+"%";
-  dot.textContent = "";
-  dot.title = n.label;
-  dot.addEventListener("click", ()=>{
-    // chọn điểm: click 1 lần = điểm xuất phát nếu trống, lần 2 = điểm đến
+  dot.addEventListener("click", (e)=>{
+    e.stopPropagation();
     if(!window._picking || window._picking === "from"){
       fromSel.value = id; window._picking = "to";
     } else {
       toSel.value = id; window._picking = "from";
     }
     render();
+    if(lastRoute) runRoute();
   });
   mapinner.appendChild(dot);
 });
@@ -204,29 +325,21 @@ function clearOverlay(){ overlay.innerHTML = ""; }
 
 function drawPath(path){
   clearOverlay();
-  // vẽ toàn bộ cạnh mờ làm nền
   EDGES.forEach(([a,b])=>{
     const A = NODES[a], B = NODES[b];
     const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1", A.x/100*1697);
-    line.setAttribute("y1", A.y/100*1200);
-    line.setAttribute("x2", B.x/100*1697);
-    line.setAttribute("y2", B.y/100*1200);
-    line.setAttribute("stroke", "#ffffff");
-    line.setAttribute("stroke-opacity", "0.25");
+    line.setAttribute("x1", A.x/100*1697); line.setAttribute("y1", A.y/100*1200);
+    line.setAttribute("x2", B.x/100*1697); line.setAttribute("y2", B.y/100*1200);
+    line.setAttribute("stroke", "#ffffff"); line.setAttribute("stroke-opacity", "0.25");
     line.setAttribute("stroke-width", "4");
     overlay.appendChild(line);
   });
-  // vẽ đường đi ngắn nhất nổi bật
   for(let i=0;i<path.length-1;i++){
     const A = NODES[path[i]], B = NODES[path[i+1]];
     const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1", A.x/100*1697);
-    line.setAttribute("y1", A.y/100*1200);
-    line.setAttribute("x2", B.x/100*1697);
-    line.setAttribute("y2", B.y/100*1200);
-    line.setAttribute("stroke", "#d97a3f");
-    line.setAttribute("stroke-width", "7");
+    line.setAttribute("x1", A.x/100*1697); line.setAttribute("y1", A.y/100*1200);
+    line.setAttribute("x2", B.x/100*1697); line.setAttribute("y2", B.y/100*1200);
+    line.setAttribute("stroke", "#d97a3f"); line.setAttribute("stroke-width", "7");
     line.setAttribute("stroke-linecap", "round");
     overlay.appendChild(line);
   }
@@ -239,34 +352,154 @@ function render(){
   document.getElementById("dot-"+to).classList.add("endpoint");
 }
 
-document.getElementById("goBtn").addEventListener("click", ()=>{
+function runRoute(){
   const from = fromSel.value, to = toSel.value;
-  if(from === to){ resultEl.textContent = "Hai điểm giống nhau."; clearOverlay(); render(); return; }
+  const t = I18N[lang];
+  if(from === to){ resultEl.textContent = t.sameNode; clearOverlay(); render(); lastRoute=null; return; }
   const res = shortestPath(from, to);
-  if(!res){ resultEl.textContent = "Không tìm được đường đi."; clearOverlay(); return; }
+  if(!res){ resultEl.textContent = t.noPath; clearOverlay(); lastRoute=null; return; }
+  lastRoute = res;
   drawPath(res.path);
   document.querySelectorAll(".node").forEach(d=>d.classList.remove("active"));
   res.path.forEach(id=> document.getElementById("dot-"+id).classList.add("active"));
   document.getElementById("dot-"+from).classList.add("endpoint");
   document.getElementById("dot-"+to).classList.add("endpoint");
-  const steps = res.path.map(id=>NODES[id].label).join(" → ");
-  resultEl.innerHTML = `Quãng đường ước tính: <b>${res.distance} m</b><br>${steps}`;
-  // cuộn tới điểm xuất phát
-  const wrap = document.getElementById("mapwrap");
-  const el = document.getElementById("dot-"+from);
-  wrap.scrollTo({
-    left: el.offsetLeft - wrap.clientWidth/2,
-    top: el.offsetTop - wrap.clientHeight/2,
-    behavior:"smooth"
-  });
-});
+  showRouteText();
+}
 
+function showRouteText(){
+  if(!lastRoute) return;
+  const t = I18N[lang];
+  const steps = lastRoute.path.map(id=>NODES[id][lang]).join(" → ");
+  resultEl.innerHTML = `${t.distancePrefix} <b>${lastRoute.distance} m</b><br>${steps}`;
+}
+
+document.getElementById("goBtn").addEventListener("click", runRoute);
 document.getElementById("swapBtn").addEventListener("click", ()=>{
   const a = fromSel.value; fromSel.value = toSel.value; toSel.value = a;
+  render(); if(lastRoute) runRoute();
+});
+[fromSel,toSel].forEach(s=> s.addEventListener("change", ()=>{ render(); if(lastRoute) runRoute(); }));
+
+function placeDot(x, y, isVirtual){
+  if(gpsDotEl) gpsDotEl.remove();
+  gpsDotEl = document.createElement("div");
+  gpsDotEl.className = "gpsdot" + (isVirtual ? " virtual" : "");
+  gpsDotEl.style.left = x+"%";
+  gpsDotEl.style.top = y+"%";
+  mapinner.appendChild(gpsDotEl);
+}
+
+function applyPosition(x, y, isVirtual){
+  const t = I18N[lang];
+  if(!isVirtual && !isOnMap(x,y)){
+    stopLiveTracking();
+    setMode("virtual");
+    gpsNoteEl.textContent = t.offSite;
+    return;
+  }
+  placeDot(x, y, isVirtual);
+  const nodeId = nearestNode(x,y);
+  fromSel.value = nodeId;
+  gpsNoteEl.textContent = isVirtual ? t.virtualMatched(NODES[nodeId][lang]) : t.liveMatched(NODES[nodeId][lang]);
   render();
+  runRoute();
+}
+
+/* ---------- 5. Real GPS: theo dõi liên tục ---------- */
+function startLiveTracking(){
+  const t = I18N[lang];
+  if(!navigator.geolocation){ gpsNoteEl.textContent = t.gpsUnsupported; return; }
+  gpsNoteEl.textContent = t.gpsSearching;
+  watchId = navigator.geolocation.watchPosition(pos=>{
+    const {latitude, longitude} = pos.coords;
+    const xy = gpsToXY(latitude, longitude);
+    applyPosition(xy.x, xy.y, false);
+  }, err=>{
+    gpsNoteEl.textContent = I18N[lang].gpsError;
+  }, { enableHighAccuracy:true, maximumAge:2000, timeout:15000 });
+  liveTracking = true;
+  gpsBtn.classList.add("tracking");
+  gpsBtn.textContent = t.liveStop;
+}
+function stopLiveTracking(){
+  if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+  liveTracking = false;
+  gpsBtn.classList.remove("tracking");
+  gpsBtn.textContent = I18N[lang].liveStart;
+}
+gpsBtn.addEventListener("click", ()=>{
+  if(mode !== "real") return;
+  if(liveTracking) stopLiveTracking(); else startLiveTracking();
 });
 
-render();
+/* ---------- 6. Virtual GPS: chạm/click trên bản đồ ---------- */
+function mapClickHandler(e){
+  if(mode !== "virtual") return;
+  const rect = mapimg.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const x = (clientX - rect.left) / rect.width * 100;
+  const y = (clientY - rect.top) / rect.height * 100;
+  applyPosition(x, y, true);
+}
+mapinner.addEventListener("click", mapClickHandler);
+
+/* ---------- 7. Chuyển chế độ real / virtual ---------- */
+function setMode(m){
+  mode = m;
+  const t = I18N[lang];
+  document.getElementById("btnReal").classList.toggle("active", mode==="real");
+  document.getElementById("btnReal").classList.toggle("real", mode==="real");
+  document.getElementById("btnVirtual").classList.toggle("active", mode==="virtual");
+  document.getElementById("btnVirtual").classList.toggle("virtual", mode==="virtual");
+  gpsBtn.style.display = mode === "real" ? "block" : "none";
+  virtualHintEl.style.display = mode === "virtual" ? "block" : "none";
+  mapinner.classList.toggle("pickmode", mode === "virtual");
+  if(mode === "virtual") stopLiveTracking();
+}
+document.getElementById("modeswitch").addEventListener("click", (e)=>{
+  const btn = e.target.closest("button[data-mode]");
+  if(!btn) return;
+  setMode(btn.dataset.mode);
+  applyLang();
+});
+
+/* ---------- 8. Ngôn ngữ ---------- */
+function applyLang(){
+  const t = I18N[lang];
+  document.getElementById("hTitle").textContent = t.title;
+  document.getElementById("hSubtitle").textContent = t.subtitle;
+  document.getElementById("lblFrom").textContent = t.fromLabel;
+  document.getElementById("lblTo").textContent = t.toLabel;
+  document.getElementById("goBtn").textContent = t.goBtn;
+  document.getElementById("hint").textContent = t.hint;
+  document.getElementById("footerText").textContent = t.footer;
+  document.getElementById("btnReal").textContent = t.modeReal;
+  document.getElementById("btnVirtual").textContent = t.modeVirtual;
+  gpsBtn.textContent = liveTracking ? t.liveStop : t.liveStart;
+  virtualHintEl.textContent = t.virtualHintText;
+  document.getElementById("btnVi").classList.toggle("active", lang==="vi");
+  document.getElementById("btnEn").classList.toggle("active", lang==="en");
+  document.documentElement.lang = lang;
+  buildOptions();
+  Object.entries(NODES).forEach(([id,n])=>{
+    const dot = document.getElementById("dot-"+id);
+    if(dot) dot.title = n[lang];
+  });
+  render();
+  if(lastRoute) showRouteText();
+}
+document.getElementById("langswitch").addEventListener("click", (e)=>{
+  const btn = e.target.closest("button[data-lang]");
+  if(!btn) return;
+  lang = btn.dataset.lang;
+  applyLang();
+});
+
+/* ---------- init ---------- */
+setMode("real");
+applyLang();
 </script>
 </body>
 </html>
