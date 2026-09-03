@@ -184,6 +184,7 @@
         <button data-amode="move" id="amMove"></button>
         <button data-amode="connect" id="amConnect"></button>
         <button data-amode="delete" id="amDelete"></button>
+        <button data-amode="addpoi" id="amAddPoi"></button>
       </div>
 
       <div class="adminBtns">
@@ -191,6 +192,18 @@
         <button id="undoBtn"></button>
         <button id="clearAllBtn" class="danger"></button>
         <button id="exportBtn"></button>
+      </div>
+
+      <div class="label-sm" id="poiManageTitle" style="margin-top:18px;"></div>
+      <div class="row">
+        <div class="field">
+          <label id="poiEditLbl"></label>
+          <select id="poiEditSel"></select>
+        </div>
+      </div>
+      <div class="adminBtns">
+        <button id="renamePoiBtn"></button>
+        <button id="deletePoiBtn" class="danger"></button>
       </div>
 
       <div class="label-sm" id="styleTitle" style="margin-top:18px;"></div>
@@ -253,6 +266,7 @@ const I18N = {
     adminToggle: "⚙ Công cụ quản trị: sơ đồ đường đi",
     adminTitle: "Sơ đồ đường đi (khung đồ thị)",
     amChain: "🖊 Vẽ chuỗi", amMove: "✥ Di chuyển điểm", amConnect: "🔗 Nối 2 điểm", amDelete: "🗑 Xóa",
+    amAddPoi: "🏷 Thêm điểm mới",
     breakChain: "✂ Bắt đầu đoạn mới", undoBtn: "↩ Hoàn tác",
     clearAllBtn: "🗑 Xóa TOÀN BỘ sơ đồ", exportBtn: "⇩ Xuất mã",
     noteChain: "Chạm vào bản đồ để đặt điểm đầu tiên. Mỗi lần chạm tiếp theo tự tạo 1 điểm mới và nối vào điểm trước — chạm trúng 1 điểm có sẵn để nối vào đúng điểm đó. Bấm 'Bắt đầu đoạn mới' để nhấc bút, vẽ 1 đoạn tách biệt ở chỗ khác.",
@@ -260,16 +274,27 @@ const I18N = {
     noteConnect: "Chạm điểm thứ nhất, rồi chạm điểm thứ hai để tạo 1 liên kết trực tiếp giữa 2 điểm đó (dùng cho đường tắt, vòng lặp, hoặc nối 2 nhánh).",
     noteConnectPicked: n => `Đã chọn "${n}" — chạm điểm thứ hai để nối.`,
     noteDelete: "Chạm vào 1 điểm nối tự do (viền nét đứt) để xóa điểm đó cùng các liên kết của nó. Chạm gần 1 đoạn đường để xóa riêng đoạn đó (điểm có tên không bị xóa, chỉ mất liên kết).",
+    noteAddPoi: "Chạm vào bản đồ tại đúng vị trí muốn thêm điểm mới — sau đó nhập STT và tên cho điểm đó.",
     savedAuto: "Đã lưu vào trình duyệt này.",
     clearedAll: "Đã xóa TOÀN BỘ sơ đồ (kể cả trong trình duyệt này).",
     confirmClearAll: "Xóa toàn bộ sơ đồ đường đi? Không thể hoàn tác.",
     nothingToUndo: "Không còn gì để hoàn tác.",
-    exportedNote: "Sao chép đoạn mã bên dưới, dán đè vào 4 biến JUNCTIONS / NODE_OVERRIDES / GRAPH_EDGES / MARKER_STYLE trong file index.html.",
+    exportedNote: "Sao chép đoạn mã bên dưới, dán đè vào 4 biến NODES / JUNCTIONS / GRAPH_EDGES / MARKER_STYLE trong file index.html.",
     styleTitle: "Kiểu hiển thị điểm (áp dụng chung)",
     styleSizeLbl: "Kích thước",
     styleColorLbl: "Màu viền",
     animStatic: "Đứng yên", animBlink: "Nhấp nháy",
-    curveStraight: "Đường thẳng", curveSmooth: "Đường cong mượt"
+    curveStraight: "Đường thẳng", curveSmooth: "Đường cong mượt",
+    poiManageTitle: "Quản lý điểm có tên",
+    poiEditLbl: "Chọn điểm",
+    renamePoiBtn: "✎ Đổi tên / STT", deletePoiBtn: "🗑 Xóa điểm này",
+    promptNum: "Số thứ tự (STT) hiển thị trên chấm (để trống nếu không có):",
+    promptVi: "Tên tiếng Việt:",
+    promptEn: "Tên tiếng Anh:",
+    confirmDeletePoi: n => `Xóa điểm "${n}"? Các liên kết nối vào điểm này cũng bị xóa. Không thể hoàn tác.`,
+    poiAdded: "Đã thêm điểm mới.",
+    poiRenamed: "Đã cập nhật tên/STT.",
+    poiDeleted: "Đã xóa điểm."
   },
   en: {
     title: "Wayfinding",
@@ -292,6 +317,7 @@ const I18N = {
     adminToggle: "⚙ Admin tool: path network",
     adminTitle: "Path network (graph editor)",
     amChain: "🖊 Draw chain", amMove: "✥ Move point", amConnect: "🔗 Connect 2 points", amDelete: "🗑 Delete",
+    amAddPoi: "🏷 Add new point",
     breakChain: "✂ Start new segment", undoBtn: "↩ Undo",
     clearAllBtn: "🗑 Delete ENTIRE network", exportBtn: "⇩ Export code",
     noteChain: "Tap the map to place the first point. Each next tap creates a new point and connects it to the previous one — tap an existing point to connect into it exactly. Click 'Start new segment' to lift the pen and draw a separate stretch elsewhere.",
@@ -299,16 +325,27 @@ const I18N = {
     noteConnect: "Tap the first point, then tap a second point to create a direct link between them (for shortcuts, loops, or joining two branches).",
     noteConnectPicked: n => `Picked "${n}" — tap the second point to connect.`,
     noteDelete: "Tap a free junction point (dashed outline) to delete it and its links. Tap near a path segment to delete just that segment (named points aren't deleted, only their link).",
+    noteAddPoi: "Tap the map at the exact spot for the new point — then enter its number and name.",
     savedAuto: "Saved to this browser.",
     clearedAll: "The ENTIRE network was deleted (including this browser's copy).",
     confirmClearAll: "Delete the entire path network? This cannot be undone.",
     nothingToUndo: "Nothing to undo.",
-    exportedNote: "Copy the snippet below and paste it over the JUNCTIONS / NODE_OVERRIDES / GRAPH_EDGES / MARKER_STYLE constants in index.html.",
+    exportedNote: "Copy the snippet below and paste it over the NODES / JUNCTIONS / GRAPH_EDGES / MARKER_STYLE constants in index.html.",
     styleTitle: "Marker style (applies to all)",
     styleSizeLbl: "Size",
     styleColorLbl: "Border color",
     animStatic: "Static", animBlink: "Blinking",
-    curveStraight: "Straight", curveSmooth: "Smooth curve"
+    curveStraight: "Straight", curveSmooth: "Smooth curve",
+    poiManageTitle: "Manage named points",
+    poiEditLbl: "Select point",
+    renamePoiBtn: "✎ Rename / number", deletePoiBtn: "🗑 Delete this point",
+    promptNum: "Number (STT) shown on the dot (leave blank for none):",
+    promptVi: "Vietnamese name:",
+    promptEn: "English name:",
+    confirmDeletePoi: n => `Delete "${n}"? Links into this point are removed too. This cannot be undone.`,
+    poiAdded: "New point added.",
+    poiRenamed: "Name/number updated.",
+    poiDeleted: "Point deleted."
   }
 };
 let lang = "vi";
@@ -317,34 +354,36 @@ const isAdmin = new URLSearchParams(location.search).get("admin") === "1";
 
 /* ============ 1. Điểm có tên (POI) — cố định, có nhãn VI/EN ============ */
 const NODES = {
-  entrance:  {vi:"Lối vào",               en:"Entrance",                x:93.4, y:13.3},
-  parking:   {vi:"Bãi đỗ xe",             en:"Parking",                 x:80.8, y:9.6},
-  lobby:     {vi:"1. Quầy lễ tân",        en:"1. Reception",            x:79.0, y:22.2},
-  spa:       {vi:"7. Fit & Spa",          en:"7. Fit & Spa",            x:69.8, y:22.8},
-  kidsclub:  {vi:"4. CLB trẻ em",         en:"4. Kids Club",            x:70.1, y:14.1},
-  bar1:      {vi:"2. Lighthouse Bar",     en:"2. Lighthouse Bar",       x:72.5, y:28.1},
-  seastars:  {vi:"6. NH Sea Stars",       en:"6. Sea Stars Restaurant", x:69.8, y:38.2},
-  saltpepper:{vi:"3. NH Salt 'N' Pepper", en:"3. Salt 'N' Pepper",      x:74.2, y:40.6},
-  madcow:    {vi:"5. NH Mad Cow",         en:"5. Mad Cow Restaurant",   x:78.2, y:42.4},
-  meeting:   {vi:"13. Phòng hội nghị",    en:"13. Conference Room",     x:83.1, y:39.6},
-  tennis:    {vi:"12. Sân quần vợt",      en:"12. Sports Courts",       x:89.5, y:35.0},
-  pool:      {vi:"8. Coconutz Bar / Hồ bơi", en:"8. Coconutz Bar / Pool", x:52.3, y:33.9},
-  eastwing:  {vi:"Tòa Đông",              en:"East Wing",               x:65.4, y:22.8},
-  westwing:  {vi:"Tòa Tây",               en:"West Wing",               x:43.1, y:22.8},
-  splash:    {vi:"10. Splashing Hub",     en:"10. Splashing Hub",       x:40.0, y:34.0},
-  beach:     {vi:"11. Beach House",       en:"11. Beach House",         x:20.4, y:33.2},
-  waterpark: {vi:"9. Công viên nước",     en:"9. Water Park",           x:45.4, y:44.3},
-  southwing: {vi:"Tòa Nam",               en:"South Wing",              x:56.2, y:50.9},
+  entrance:  {vi:"Lối vào",               en:"Entrance",                num:"",   x:93.4, y:13.3},
+  parking:   {vi:"Bãi đỗ xe",             en:"Parking",                 num:"",   x:80.8, y:9.6},
+  lobby:     {vi:"1. Quầy lễ tân",        en:"1. Reception",            num:"1",  x:79.0, y:22.2},
+  spa:       {vi:"7. Fit & Spa",          en:"7. Fit & Spa",            num:"7",  x:69.8, y:22.8},
+  kidsclub:  {vi:"4. CLB trẻ em",         en:"4. Kids Club",            num:"4",  x:70.1, y:14.1},
+  bar1:      {vi:"2. Lighthouse Bar",     en:"2. Lighthouse Bar",       num:"2",  x:72.5, y:28.1},
+  seastars:  {vi:"6. NH Sea Stars",       en:"6. Sea Stars Restaurant", num:"6",  x:69.8, y:38.2},
+  saltpepper:{vi:"3. NH Salt 'N' Pepper", en:"3. Salt 'N' Pepper",      num:"3",  x:74.2, y:40.6},
+  madcow:    {vi:"5. NH Mad Cow",         en:"5. Mad Cow Restaurant",   num:"5",  x:78.2, y:42.4},
+  meeting:   {vi:"13. Phòng hội nghị",    en:"13. Conference Room",     num:"13", x:83.1, y:39.6},
+  tennis:    {vi:"12. Sân quần vợt",      en:"12. Sports Courts",       num:"12", x:89.5, y:35.0},
+  pool:      {vi:"8. Coconutz Bar / Hồ bơi", en:"8. Coconutz Bar / Pool", num:"8", x:52.3, y:33.9},
+  eastwing:  {vi:"Tòa Đông",              en:"East Wing",               num:"",   x:65.4, y:22.8},
+  westwing:  {vi:"Tòa Tây",               en:"West Wing",               num:"",   x:43.1, y:22.8},
+  splash:    {vi:"10. Splashing Hub",     en:"10. Splashing Hub",       num:"10", x:40.0, y:34.0},
+  beach:     {vi:"11. Beach House",       en:"11. Beach House",         num:"11", x:20.4, y:33.2},
+  waterpark: {vi:"9. Công viên nước",     en:"9. Water Park",           num:"9",  x:45.4, y:44.3},
+  southwing: {vi:"Tòa Nam",               en:"South Wing",              num:"",   x:56.2, y:50.9},
 };
+let poiSeq = 0;
 
 /* ============ 2. Sơ đồ đường đi (khung đồ thị) do quản trị tự vẽ ============
    JUNCTIONS: điểm nối tự do không tên, do công cụ tạo ra khi vẽ chuỗi — {id:{x,y}}
-   NODE_OVERRIDES: vị trí đã chỉnh lại cho 1 điểm có tên (nếu có kéo/di chuyển) — {id:{x,y}}
    GRAPH_EDGES: danh sách liên kết [idA, idB] — idA/idB có thể là điểm có tên hoặc điểm nối tự do
-   Dán đè cả 3 biến này bằng đoạn mã xuất ra từ nút "Xuất mã" để publish cho mọi khách. */
+   NODES (ở trên) cũng được công cụ quản trị chỉnh trực tiếp: di chuyển, đổi tên/STT, hoặc thêm điểm mới.
+   Dán đè cả 4 biến (NODES / JUNCTIONS / GRAPH_EDGES / MARKER_STYLE) bằng đoạn mã xuất ra từ nút
+   "Xuất mã" để publish cho mọi khách. */
 const JUNCTIONS = {};
-const NODE_OVERRIDES = {};
 const GRAPH_EDGES = [];
+const NODES_DEFAULT = JSON.parse(JSON.stringify(NODES)); // bản gốc, dùng để tham chiếu khi cần
 
 /* 1 đơn vị bản đồ (hệ tọa độ % chuẩn hóa 0-1000) ứng với bao nhiêu mét thật.
    Chỉnh DUY NHẤT con số này nếu quãng đường hiển thị chưa đúng tỉ lệ thực tế. */
@@ -354,11 +393,7 @@ const METERS_PER_UNIT = 0.9;
    quản trị rồi "Xuất mã" để dán đè giá trị mặc định này. */
 const MARKER_STYLE = { size: 24, borderColor: "#1f3b2f", blink: false, curved: true };
 
-function vertexPos(id){
-  if(JUNCTIONS[id]) return JUNCTIONS[id];
-  if(NODE_OVERRIDES[id]) return NODE_OVERRIDES[id];
-  return NODES[id];
-}
+function vertexPos(id){ return JUNCTIONS[id] || NODES[id]; }
 function isPOI(id){ return !!NODES[id]; }
 function vertexLabel(id){ return isPOI(id) ? NODES[id][lang] : null; }
 function edgeLen(a,b){ const A=vertexPos(a), B=vertexPos(b); return Math.hypot(A.x-B.x, A.y-B.y); }
@@ -460,11 +495,13 @@ function buildOptions(sel, value){
 }
 
 const poiDotEls = {};
-Object.keys(NODES).forEach(id=>{
+function createPOIDot(id){
   const dot = document.createElement("div");
   dot.className = "node"; dot.id = "dot-"+id;
   const p = vertexPos(id);
   dot.style.left = p.x+"%"; dot.style.top = p.y+"%";
+  dot.textContent = NODES[id].num || "";
+  dot.title = NODES[id][lang];
   dot.addEventListener("click", (e)=>{
     if(adminMode){ return; } // để mapinner xử lý theo chế độ quản trị đang bật
     e.stopPropagation();
@@ -474,7 +511,8 @@ Object.keys(NODES).forEach(id=>{
   });
   mapinner.appendChild(dot);
   poiDotEls[id] = dot;
-});
+}
+Object.keys(NODES).forEach(createPOIDot);
 
 function clearOverlay(){ overlay.innerHTML = ""; }
 function svgLine(x1,y1,x2,y2,stroke,width,dash){
@@ -679,22 +717,29 @@ function nearestEdgeIndex(x,y){
 }
 
 function snapshotPush(){
-  undoStack.push(JSON.stringify({JUNCTIONS, NODE_OVERRIDES, GRAPH_EDGES, junctionSeq}));
+  undoStack.push(JSON.stringify({NODES, JUNCTIONS, GRAPH_EDGES, junctionSeq, poiSeq}));
   if(undoStack.length>60) undoStack.shift();
 }
 function saveGraph(){
-  localStorage.setItem("resortGraphV2", JSON.stringify({JUNCTIONS, NODE_OVERRIDES, GRAPH_EDGES, junctionSeq}));
+  localStorage.setItem("resortGraphV3", JSON.stringify({NODES, JUNCTIONS, GRAPH_EDGES, junctionSeq, poiSeq}));
+}
+function seqFromKeys(obj, prefix){
+  let max = 0;
+  const re = new RegExp("^"+prefix+"(\\d+)$");
+  Object.keys(obj).forEach(k=>{ const m=k.match(re); if(m) max = Math.max(max, parseInt(m[1],10)); });
+  return max;
 }
 function loadGraph(){
   try{
-    const raw = JSON.parse(localStorage.getItem("resortGraphV2") || "null");
+    const raw = JSON.parse(localStorage.getItem("resortGraphV3") || "null");
     if(raw){
+      Object.assign(NODES, raw.NODES||{});
       Object.assign(JUNCTIONS, raw.JUNCTIONS||{});
-      Object.assign(NODE_OVERRIDES, raw.NODE_OVERRIDES||{});
       GRAPH_EDGES.push(...(raw.GRAPH_EDGES||[]));
-      junctionSeq = raw.junctionSeq||0;
     }
   }catch(e){}
+  junctionSeq = Math.max(junctionSeq, seqFromKeys(JUNCTIONS,"j"));
+  poiSeq = Math.max(poiSeq, seqFromKeys(NODES,"poi"));
 }
 
 function createJunctionDot(id){
@@ -711,9 +756,18 @@ function rebuildJunctionDots(){
   if(!isAdmin) return;
   Object.keys(JUNCTIONS).forEach(createJunctionDot);
 }
+function rebuildPOIDots(){
+  Object.values(poiDotEls).forEach(el=>el.remove());
+  Object.keys(poiDotEls).forEach(k=>delete poiDotEls[k]);
+  Object.keys(NODES).forEach(createPOIDot);
+}
 function updateVertexDotPos(id){
   const p = vertexPos(id);
-  if(poiDotEls[id]){ poiDotEls[id].style.left=p.x+"%"; poiDotEls[id].style.top=p.y+"%"; }
+  if(poiDotEls[id]){
+    poiDotEls[id].style.left=p.x+"%"; poiDotEls[id].style.top=p.y+"%";
+    poiDotEls[id].textContent = NODES[id].num || "";
+    poiDotEls[id].title = NODES[id][lang];
+  }
   if(junctionDotEls[id]){ junctionDotEls[id].style.left=p.x+"%"; junctionDotEls[id].style.top=p.y+"%"; }
 }
 
@@ -730,7 +784,8 @@ function setAdminMode(m){
   });
   document.querySelectorAll(".node.selected,.junction.selected").forEach(el=>el.classList.remove("selected"));
   const t = I18N[lang];
-  adminNoteEl.textContent = m==="chain" ? t.noteChain : m==="move" ? t.noteMove : m==="connect" ? t.noteConnect : t.noteDelete;
+  adminNoteEl.textContent = m==="chain" ? t.noteChain : m==="move" ? t.noteMove :
+    m==="connect" ? t.noteConnect : m==="addpoi" ? t.noteAddPoi : t.noteDelete;
   updateCursor();
 }
 document.getElementById("adminModeSwitch").addEventListener("click",(e)=>{
@@ -750,30 +805,28 @@ document.getElementById("undoBtn").addEventListener("click", ()=>{
   if(!undoStack.length){ adminNoteEl.textContent = I18N[lang].nothingToUndo; return; }
   const snap = JSON.parse(undoStack.pop());
   Object.keys(JUNCTIONS).forEach(k=>delete JUNCTIONS[k]); Object.assign(JUNCTIONS, snap.JUNCTIONS);
-  Object.keys(NODE_OVERRIDES).forEach(k=>delete NODE_OVERRIDES[k]); Object.assign(NODE_OVERRIDES, snap.NODE_OVERRIDES);
+  Object.keys(NODES).forEach(k=>delete NODES[k]); Object.assign(NODES, snap.NODES);
   GRAPH_EDGES.length = 0; GRAPH_EDGES.push(...snap.GRAPH_EDGES);
-  junctionSeq = snap.junctionSeq;
-  saveGraph(); rebuildGraph(); rebuildJunctionDots();
-  Object.keys(NODES).forEach(updateVertexDotPos);
+  junctionSeq = snap.junctionSeq; poiSeq = snap.poiSeq;
+  saveGraph(); rebuildGraph(); rebuildJunctionDots(); rebuildPOIDots();
   chainLast = null; connectPick = null;
+  buildOptions(fromSel, fromSel.value); buildOptions(toSel, toSel.value);
   redrawAdminView();
 });
 document.getElementById("clearAllBtn").addEventListener("click", ()=>{
   if(!confirm(I18N[lang].confirmClearAll)) return;
   snapshotPush();
   Object.keys(JUNCTIONS).forEach(k=>delete JUNCTIONS[k]);
-  Object.keys(NODE_OVERRIDES).forEach(k=>delete NODE_OVERRIDES[k]);
   GRAPH_EDGES.length = 0; junctionSeq = 0;
   saveGraph(); rebuildGraph(); rebuildJunctionDots();
-  Object.keys(NODES).forEach(updateVertexDotPos);
   chainLast = null; connectPick = null;
   adminNoteEl.textContent = I18N[lang].clearedAll;
   lastRoute = null; resultEl.textContent = "";
   redrawAdminView();
 });
 document.getElementById("exportBtn").addEventListener("click", ()=>{
-  const code = "const JUNCTIONS = " + JSON.stringify(JUNCTIONS, null, 2) + ";\n\n" +
-               "const NODE_OVERRIDES = " + JSON.stringify(NODE_OVERRIDES, null, 2) + ";\n\n" +
+  const code = "const NODES = " + JSON.stringify(NODES, null, 2) + ";\n\n" +
+               "const JUNCTIONS = " + JSON.stringify(JUNCTIONS, null, 2) + ";\n\n" +
                "const GRAPH_EDGES = " + JSON.stringify(GRAPH_EDGES, null, 2) + ";\n\n" +
                "const MARKER_STYLE = " + JSON.stringify(STYLE, null, 2) + ";";
   codeOut.value = code; codeOut.style.display = "block"; codeOut.select();
@@ -885,7 +938,7 @@ mapinner.addEventListener("pointermove",(e)=>{
   dragMoved = true;
   const p = pointerToPercent(e);
   if(JUNCTIONS[dragId]) JUNCTIONS[dragId] = {x:p.x,y:p.y};
-  else NODE_OVERRIDES[dragId] = {x:p.x,y:p.y};
+  else { NODES[dragId].x = p.x; NODES[dragId].y = p.y; }
   updateVertexDotPos(dragId);
   redrawAdminView();
 });
@@ -899,12 +952,75 @@ mapinner.addEventListener("pointerup", endDrag);
 mapinner.addEventListener("pointercancel", endDrag);
 
 /* --- Click chung: định tuyến theo adminMode, hoặc GPS ảo cho khách --- */
+/* --- Thêm điểm có tên mới --- */
+function handleAddPoiTap(x,y){
+  const t = I18N[lang];
+  const num = prompt(t.promptNum, "");
+  if(num === null) return;
+  const vi = prompt(t.promptVi, "");
+  if(vi === null || !vi.trim()) return;
+  const en = prompt(t.promptEn, vi.trim());
+  if(en === null) return;
+  snapshotPush();
+  poiSeq++;
+  const id = "poi"+poiSeq;
+  NODES[id] = { vi: vi.trim(), en: en.trim() || vi.trim(), num: (num||"").trim(), x, y };
+  createPOIDot(id);
+  saveGraph(); rebuildGraph();
+  buildOptions(fromSel, fromSel.value); buildOptions(toSel, toSel.value); syncPoiEditSel();
+  adminNoteEl.textContent = t.poiAdded;
+}
+function syncPoiEditSel(){
+  const sel = document.getElementById("poiEditSel");
+  const keep = sel.value;
+  sel.innerHTML = "";
+  Object.keys(NODES).forEach(id=>{
+    const o = document.createElement("option"); o.value=id; o.textContent = NODES[id][lang]; sel.appendChild(o);
+  });
+  if(keep && NODES[keep]) sel.value = keep;
+}
+document.getElementById("renamePoiBtn").addEventListener("click", ()=>{
+  const t = I18N[lang];
+  const id = document.getElementById("poiEditSel").value;
+  if(!id || !NODES[id]) return;
+  const num = prompt(t.promptNum, NODES[id].num || "");
+  if(num === null) return;
+  const vi = prompt(t.promptVi, NODES[id].vi);
+  if(vi === null || !vi.trim()) return;
+  const en = prompt(t.promptEn, NODES[id].en);
+  if(en === null) return;
+  snapshotPush();
+  NODES[id].num = (num||"").trim(); NODES[id].vi = vi.trim(); NODES[id].en = en.trim() || vi.trim();
+  updateVertexDotPos(id);
+  saveGraph();
+  buildOptions(fromSel, fromSel.value); buildOptions(toSel, toSel.value); syncPoiEditSel();
+  adminNoteEl.textContent = t.poiRenamed;
+});
+document.getElementById("deletePoiBtn").addEventListener("click", ()=>{
+  const t = I18N[lang];
+  const id = document.getElementById("poiEditSel").value;
+  if(!id || !NODES[id]) return;
+  if(!confirm(t.confirmDeletePoi(NODES[id][lang]))) return;
+  snapshotPush();
+  if(poiDotEls[id]){ poiDotEls[id].remove(); delete poiDotEls[id]; }
+  delete NODES[id];
+  for(let i=GRAPH_EDGES.length-1;i>=0;i--){ if(GRAPH_EDGES[i].includes(id)) GRAPH_EDGES.splice(i,1); }
+  if(fromSel.value === id) fromSel.value = Object.keys(NODES)[0];
+  if(toSel.value === id) toSel.value = Object.keys(NODES)[0];
+  saveGraph(); rebuildGraph();
+  buildOptions(fromSel, fromSel.value); buildOptions(toSel, toSel.value); syncPoiEditSel();
+  lastRoute = null; resultEl.textContent = "";
+  redrawAdminView();
+  adminNoteEl.textContent = t.poiDeleted;
+});
+
 mapinner.addEventListener("click", (e)=>{
   if(dragMoved){ dragMoved=false; return; } // vừa kéo xong thì bỏ qua click ăn theo
   const p = pointerToPercent(e);
   if(isAdmin && adminMode === "chain"){ handleChainTap(p.x,p.y); return; }
   if(isAdmin && adminMode === "connect"){ handleConnectTap(p.x,p.y); return; }
   if(isAdmin && adminMode === "delete"){ handleDeleteTap(p.x,p.y); return; }
+  if(isAdmin && adminMode === "addpoi"){ handleAddPoiTap(p.x,p.y); return; }
   if(isAdmin && adminMode === "move"){ return; }
   if(mode === "virtual"){ applyPosition(p.x,p.y,true); }
 });
@@ -930,10 +1046,15 @@ function applyLang(){
   document.getElementById("amMove").textContent = t.amMove;
   document.getElementById("amConnect").textContent = t.amConnect;
   document.getElementById("amDelete").textContent = t.amDelete;
+  document.getElementById("amAddPoi").textContent = t.amAddPoi;
   document.getElementById("breakChainBtn").textContent = t.breakChain;
   document.getElementById("undoBtn").textContent = t.undoBtn;
   document.getElementById("clearAllBtn").textContent = t.clearAllBtn;
   document.getElementById("exportBtn").textContent = t.exportBtn;
+  document.getElementById("poiManageTitle").textContent = t.poiManageTitle;
+  document.getElementById("poiEditLbl").textContent = t.poiEditLbl;
+  document.getElementById("renamePoiBtn").textContent = t.renamePoiBtn;
+  document.getElementById("deletePoiBtn").textContent = t.deletePoiBtn;
   document.getElementById("styleTitle").textContent = t.styleTitle;
   document.getElementById("styleSizeLbl").textContent = t.styleSizeLbl;
   document.getElementById("styleColorLbl").textContent = t.styleColorLbl;
@@ -941,6 +1062,7 @@ function applyLang(){
   document.getElementById("animBlink").textContent = t.animBlink;
   document.getElementById("curveStraight").textContent = t.curveStraight;
   document.getElementById("curveSmooth").textContent = t.curveSmooth;
+  syncPoiEditSel();
   document.getElementById("btnVi").classList.toggle("active", lang==="vi");
   document.getElementById("btnEn").classList.toggle("active", lang==="en");
   document.documentElement.lang = lang;

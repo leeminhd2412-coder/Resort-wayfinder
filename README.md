@@ -39,7 +39,7 @@ Mở link này sẽ thấy thêm nút "⚙ Công cụ quản trị: sơ đồ đ
 
 ### Cách vẽ — kiểu đồ thị: điểm + liên kết
 
-Công cụ có 4 chế độ (chọn ở hàng nút trong bảng quản trị):
+Công cụ có 5 chế độ (chọn ở hàng nút trong bảng quản trị):
 
 **🖊 Vẽ chuỗi** — chế độ mặc định. Chạm vào bản đồ để đặt điểm đầu tiên. Mỗi lần chạm tiếp theo:
 - Nếu chạm vào chỗ trống → tự tạo 1 **điểm nối mới** (chấm viền nét đứt) và **tự nối** vào điểm chạm trước đó.
@@ -53,7 +53,16 @@ Cứ thế đi dọc theo hình dạng lối đi thật ngoài đời. Muốn v�
 
 **🗑 Xóa** — chạm 1 điểm nối tự do (viền nét đứt) để xóa điểm đó + toàn bộ liên kết dính vào nó. Chạm gần 1 đoạn đường để xóa riêng đoạn đó (điểm có tên/điểm nối vẫn còn, chỉ mất 1 liên kết).
 
+**🏷 Thêm điểm mới** — chạm đúng vị trí trên bản đồ muốn thêm 1 điểm có tên (chấm tròn lớn, hiện trong danh sách "Điểm xuất phát/Điểm đến" của khách) — sau đó nhập STT hiển thị trên chấm, tên tiếng Việt, tên tiếng Anh qua 3 hộp thoại hiện ra.
+
 Mọi thao tác đều có thể **"↩ Hoàn tác"** (undo nhiều bước liên tiếp).
+
+### Quản lý điểm có tên (đổi tên, đổi STT, xóa)
+
+Mục **"Quản lý điểm có tên"** trong panel quản trị: chọn 1 điểm bất kỳ (kể cả 18 điểm gốc trên bản đồ) ở ô "Chọn điểm", rồi:
+
+- **"✎ Đổi tên / STT"** — mở 3 hộp thoại đã điền sẵn giá trị hiện tại, sửa rồi bấm OK để lưu. Số/tên mới hiện ngay trên chấm và trong danh sách "Điểm xuất phát/Điểm đến".
+- **"🗑 Xóa điểm này"** — xóa hẳn điểm đó (kèm mọi liên kết nối vào nó). Có xác nhận trước khi xóa.
 
 ### Kiểu hiển thị điểm (áp dụng chung cho tất cả)
 
@@ -74,16 +83,15 @@ Mỗi lần chạm quy đổi đúng theo % vị trí thật trên ảnh bản �
 
 Mọi thay đổi tự lưu tạm vào trình duyệt (localStorage) ngay khi thao tác — an toàn khi lỡ tắt tab. Nhưng **chỉ trình duyệt của bạn thấy được**. Để mọi khách đều thấy:
 
-1. Vẽ xong toàn bộ sơ đồ và chỉnh kiểu hiển thị ưng ý, bấm **"⇩ Xuất mã"** — 1 đoạn mã hiện ra trong ô văn bản (gồm 4 phần: `JUNCTIONS`, `NODE_OVERRIDES`, `GRAPH_EDGES`, `MARKER_STYLE`).
+1. Vẽ xong toàn bộ sơ đồ, thêm/đổi tên điểm và chỉnh kiểu hiển thị ưng ý, bấm **"⇩ Xuất mã"** — 1 đoạn mã hiện ra trong ô văn bản (gồm 4 phần: `NODES`, `JUNCTIONS`, `GRAPH_EDGES`, `MARKER_STYLE`).
 2. Sao chép toàn bộ đoạn mã đó.
-3. Mở `index.html`, tìm 4 dòng:
+3. Mở `index.html`, tìm khối `const NODES = { ... };` (danh sách điểm có tên ở gần đầu file) và 3 dòng:
    ```js
    const JUNCTIONS = {};
-   const NODE_OVERRIDES = {};
    const GRAPH_EDGES = [];
    const MARKER_STYLE = { size: 24, borderColor: "#1f3b2f", blink: false, curved: true };
    ```
-   **Thay thế toàn bộ** bằng đoạn mã vừa sao chép.
+   **Thay thế toàn bộ cả 4 khối này** bằng đoạn mã vừa sao chép (đoạn mã xuất ra đã bao gồm sẵn `const NODES = {...}` mới, dùng để thay thế khối `NODES` gốc).
 4. Lưu file, Commit + Push lên GitHub.
 
 Nếu thấy sơ đồ hiện đường lạ không nhớ đã vẽ, nhiều khả năng là dữ liệu thử nghiệm cũ còn sót trong trình duyệt — bấm **"🗑 Xóa TOÀN BỘ sơ đồ"** để làm sạch rồi vẽ lại.
