@@ -97,13 +97,21 @@
   .mapinner img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
   svg.overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
 
-  .node{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;
-    border-radius:50%;background:var(--sand2);border:2px solid var(--forest);
-    display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
-    color:var(--forest);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);z-index:2;}
+  .node{position:absolute;transform:translate(-50%,-50%);width:var(--node-size,24px);height:var(--node-size,24px);
+    border-radius:50%;background:var(--sand2);border:2px solid var(--node-border-color,var(--forest));
+    display:flex;align-items:center;justify-content:center;font-size:var(--node-font,10px);font-weight:700;
+    color:var(--node-border-color,var(--forest));cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);z-index:2;}
   .node.active{background:var(--gold);border-color:var(--gold);color:#fff;}
-  .node.endpoint{background:var(--forest);border-color:var(--forest);color:var(--sand2);width:28px;height:28px;font-size:11px;}
+  .node.endpoint{background:var(--forest);border-color:var(--forest);color:var(--sand2);
+    width:calc(var(--node-size,24px) + 4px);height:calc(var(--node-size,24px) + 4px);}
   .node.selected{background:var(--clay);border-color:var(--clay);color:#fff;}
+  @keyframes nodePulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.18);}}
+  .mapinner.blinkOn .node{animation:nodePulse 1.6s ease-in-out infinite;}
+
+  .stylerow{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11.5px;color:var(--muted);}
+  .stylerow input[type=range]{flex:1;}
+  .stylerow input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;padding:0;background:#fff;cursor:pointer;}
+  .stylerow .sizeVal{width:34px;text-align:right;color:var(--ink);font-weight:600;}
 
   .junction{position:absolute;transform:translate(-50%,-50%);width:13px;height:13px;
     border-radius:50%;background:#fff;border:2px dashed var(--clay);cursor:pointer;z-index:1;}
@@ -184,6 +192,26 @@
         <button id="clearAllBtn" class="danger"></button>
         <button id="exportBtn"></button>
       </div>
+
+      <div class="label-sm" id="styleTitle" style="margin-top:18px;"></div>
+      <div class="stylerow">
+        <span id="styleSizeLbl"></span>
+        <input type="range" id="styleSizeRange" min="14" max="40" step="2">
+        <span class="sizeVal" id="styleSizeVal"></span>
+      </div>
+      <div class="stylerow">
+        <span id="styleColorLbl"></span>
+        <input type="color" id="styleColorInput">
+      </div>
+      <div class="modeswitch admin4" id="styleAnimSwitch">
+        <button data-anim="static" id="animStatic"></button>
+        <button data-anim="blink" id="animBlink"></button>
+      </div>
+      <div class="modeswitch admin4" id="styleCurveSwitch">
+        <button data-curve="straight" id="curveStraight"></button>
+        <button data-curve="smooth" id="curveSmooth"></button>
+      </div>
+
       <textarea class="codeOut" id="codeOut" readonly style="display:none;"></textarea>
     </div>
   </div>
@@ -236,7 +264,12 @@ const I18N = {
     clearedAll: "Đã xóa TOÀN BỘ sơ đồ (kể cả trong trình duyệt này).",
     confirmClearAll: "Xóa toàn bộ sơ đồ đường đi? Không thể hoàn tác.",
     nothingToUndo: "Không còn gì để hoàn tác.",
-    exportedNote: "Sao chép đoạn mã bên dưới, dán đè vào 3 biến JUNCTIONS / NODE_OVERRIDES / GRAPH_EDGES trong file index.html."
+    exportedNote: "Sao chép đoạn mã bên dưới, dán đè vào 4 biến JUNCTIONS / NODE_OVERRIDES / GRAPH_EDGES / MARKER_STYLE trong file index.html.",
+    styleTitle: "Kiểu hiển thị điểm (áp dụng chung)",
+    styleSizeLbl: "Kích thước",
+    styleColorLbl: "Màu viền",
+    animStatic: "Đứng yên", animBlink: "Nhấp nháy",
+    curveStraight: "Đường thẳng", curveSmooth: "Đường cong mượt"
   },
   en: {
     title: "Wayfinding",
@@ -270,7 +303,12 @@ const I18N = {
     clearedAll: "The ENTIRE network was deleted (including this browser's copy).",
     confirmClearAll: "Delete the entire path network? This cannot be undone.",
     nothingToUndo: "Nothing to undo.",
-    exportedNote: "Copy the snippet below and paste it over the JUNCTIONS / NODE_OVERRIDES / GRAPH_EDGES constants in index.html."
+    exportedNote: "Copy the snippet below and paste it over the JUNCTIONS / NODE_OVERRIDES / GRAPH_EDGES / MARKER_STYLE constants in index.html.",
+    styleTitle: "Marker style (applies to all)",
+    styleSizeLbl: "Size",
+    styleColorLbl: "Border color",
+    animStatic: "Static", animBlink: "Blinking",
+    curveStraight: "Straight", curveSmooth: "Smooth curve"
   }
 };
 let lang = "vi";
@@ -311,6 +349,10 @@ const GRAPH_EDGES = [];
 /* 1 đơn vị bản đồ (hệ tọa độ % chuẩn hóa 0-1000) ứng với bao nhiêu mét thật.
    Chỉnh DUY NHẤT con số này nếu quãng đường hiển thị chưa đúng tỉ lệ thực tế. */
 const METERS_PER_UNIT = 0.9;
+
+/* Kiểu hiển thị các chấm tròn trên bản đồ, áp dụng CHUNG cho tất cả — chỉnh qua panel
+   quản trị rồi "Xuất mã" để dán đè giá trị mặc định này. */
+const MARKER_STYLE = { size: 24, borderColor: "#1f3b2f", blink: false, curved: true };
 
 function vertexPos(id){
   if(JUNCTIONS[id]) return JUNCTIONS[id];
@@ -358,17 +400,26 @@ function shortestPath(start,end){
   return {path, distance: dist[end]};
 }
 
-/* ============ 4. GPS calibration (⚠️ số giả — xem README) ============ */
+/* ============ 4. GPS calibration (⚠️ số giả — xem README) ============
+   Dùng phép biến đổi "similarity" (tỉ lệ + xoay) suy ra từ 2 điểm mốc, thay vì chỉ nội suy
+   trục X/Y độc lập — chính xác hơn khi bản đồ không thẳng theo hướng Bắc-Nam thật. */
 const GPS_CALIBRATION = {
   anchor1: { lat: 15.97000, lng: 108.25000, nodeId: "entrance" },
   anchor2: { lat: 15.96850, lng: 108.24870, nodeId: "beach" },
 };
+function complexMul(ax,ay,bx,by){ return { re: ax*bx-ay*by, im: ax*by+ay*bx }; }
+function complexDiv(ax,ay,bx,by){ const d=bx*bx+by*by; return { re:(ax*bx+ay*by)/d, im:(ay*bx-ax*by)/d }; }
 function gpsToXY(lat, lng){
   const a1 = GPS_CALIBRATION.anchor1, a2 = GPS_CALIBRATION.anchor2;
   const n1 = vertexPos(a1.nodeId), n2 = vertexPos(a2.nodeId);
-  const tx = (lng - a1.lng) / (a2.lng - a1.lng);
-  const ty = (lat - a1.lat) / (a2.lat - a1.lat);
-  return { x: n1.x + tx * (n2.x - n1.x), y: n1.y + ty * (n2.y - n1.y) };
+  const avgLatRad = (a1.lat + a2.lat) / 2 * Math.PI / 180;
+  const mPerDegLat = 111320, mPerDegLng = 111320 * Math.cos(avgLatRad);
+  const gx = (a2.lng - a1.lng) * mPerDegLng, gy = (a2.lat - a1.lat) * mPerDegLat;
+  const xx = n2.x - n1.x, xy = n2.y - n1.y;
+  const T = complexDiv(xx, xy, gx, gy); // hệ số tỉ lệ + xoay suy ra từ 2 điểm mốc
+  const dx = (lng - a1.lng) * mPerDegLng, dy = (lat - a1.lat) * mPerDegLat;
+  const P = complexMul(dx, dy, T.re, T.im);
+  return { x: n1.x + P.re, y: n1.y + P.im };
 }
 function nearestPOI(x, y){
   let best = null, bestD = Infinity;
@@ -441,11 +492,31 @@ function drawBaseNetwork(){
     svgLine(toVX(A.x),toVY(A.y),toVX(B.x),toVY(B.y),"#f8f5ec",3,null);
   });
 }
+function smoothPathD(pts){
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0 = pts[i-1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i+1];
+    const p3 = pts[i+2] || p2;
+    const c1x = p1.x + (p2.x-p0.x)/6, c1y = p1.y + (p2.y-p0.y)/6;
+    const c2x = p2.x - (p3.x-p1.x)/6, c2y = p2.y - (p3.y-p1.y)/6;
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
 function drawPath(path){
   clearOverlay();
-  for(let i=0;i<path.length-1;i++){
-    const A=vertexPos(path[i]), B=vertexPos(path[i+1]);
-    svgLine(toVX(A.x),toVY(A.y),toVX(B.x),toVY(B.y),"#b9925a",6,null);
+  const pts = path.map(id=>{ const p=vertexPos(id); return { x:toVX(p.x), y:toVY(p.y) }; });
+  if(STYLE.curved && pts.length >= 3){
+    const el = document.createElementNS("http://www.w3.org/2000/svg","path");
+    el.setAttribute("d", smoothPathD(pts));
+    el.setAttribute("fill","none"); el.setAttribute("stroke","#b9925a");
+    el.setAttribute("stroke-width","6"); el.setAttribute("stroke-linecap","round");
+    el.setAttribute("stroke-linejoin","round");
+    overlay.appendChild(el);
+  } else {
+    for(let i=0;i<pts.length-1;i++) svgLine(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y,"#b9925a",6,null);
   }
 }
 
@@ -703,9 +774,52 @@ document.getElementById("clearAllBtn").addEventListener("click", ()=>{
 document.getElementById("exportBtn").addEventListener("click", ()=>{
   const code = "const JUNCTIONS = " + JSON.stringify(JUNCTIONS, null, 2) + ";\n\n" +
                "const NODE_OVERRIDES = " + JSON.stringify(NODE_OVERRIDES, null, 2) + ";\n\n" +
-               "const GRAPH_EDGES = " + JSON.stringify(GRAPH_EDGES, null, 2) + ";";
+               "const GRAPH_EDGES = " + JSON.stringify(GRAPH_EDGES, null, 2) + ";\n\n" +
+               "const MARKER_STYLE = " + JSON.stringify(STYLE, null, 2) + ";";
   codeOut.value = code; codeOut.style.display = "block"; codeOut.select();
   adminNoteEl.textContent = I18N[lang].exportedNote;
+});
+
+/* --- Kiểu hiển thị điểm (áp dụng chung cho tất cả chấm tròn) --- */
+let STYLE = Object.assign({}, MARKER_STYLE);
+try{
+  const savedStyle = JSON.parse(localStorage.getItem("resortMarkerStyle") || "null");
+  if(savedStyle) Object.assign(STYLE, savedStyle);
+}catch(e){}
+function applyStyle(){
+  document.documentElement.style.setProperty("--node-size", STYLE.size+"px");
+  document.documentElement.style.setProperty("--node-font", Math.round(STYLE.size*0.42)+"px");
+  document.documentElement.style.setProperty("--node-border-color", STYLE.borderColor);
+  mapinner.classList.toggle("blinkOn", !!STYLE.blink);
+}
+function saveStyle(){ localStorage.setItem("resortMarkerStyle", JSON.stringify(STYLE)); }
+function syncStyleControls(){
+  document.getElementById("styleSizeRange").value = STYLE.size;
+  document.getElementById("styleSizeVal").textContent = STYLE.size+"px";
+  document.getElementById("styleColorInput").value = STYLE.borderColor;
+  document.getElementById("animStatic").classList.toggle("active", !STYLE.blink);
+  document.getElementById("animBlink").classList.toggle("active", !!STYLE.blink);
+  document.getElementById("curveStraight").classList.toggle("active", !STYLE.curved);
+  document.getElementById("curveSmooth").classList.toggle("active", !!STYLE.curved);
+}
+document.getElementById("styleSizeRange").addEventListener("input",(e)=>{
+  STYLE.size = parseInt(e.target.value,10);
+  document.getElementById("styleSizeVal").textContent = STYLE.size+"px";
+  applyStyle(); saveStyle();
+});
+document.getElementById("styleColorInput").addEventListener("input",(e)=>{
+  STYLE.borderColor = e.target.value; applyStyle(); saveStyle();
+});
+document.getElementById("styleAnimSwitch").addEventListener("click",(e)=>{
+  const btn = e.target.closest("button[data-anim]"); if(!btn) return;
+  STYLE.blink = btn.dataset.anim === "blink";
+  applyStyle(); saveStyle(); syncStyleControls();
+});
+document.getElementById("styleCurveSwitch").addEventListener("click",(e)=>{
+  const btn = e.target.closest("button[data-curve]"); if(!btn) return;
+  STYLE.curved = btn.dataset.curve === "smooth";
+  saveStyle(); syncStyleControls();
+  if(lastRoute) drawPath(lastRoute.path);
 });
 
 /* --- Vẽ chuỗi (chain) --- */
@@ -820,6 +934,13 @@ function applyLang(){
   document.getElementById("undoBtn").textContent = t.undoBtn;
   document.getElementById("clearAllBtn").textContent = t.clearAllBtn;
   document.getElementById("exportBtn").textContent = t.exportBtn;
+  document.getElementById("styleTitle").textContent = t.styleTitle;
+  document.getElementById("styleSizeLbl").textContent = t.styleSizeLbl;
+  document.getElementById("styleColorLbl").textContent = t.styleColorLbl;
+  document.getElementById("animStatic").textContent = t.animStatic;
+  document.getElementById("animBlink").textContent = t.animBlink;
+  document.getElementById("curveStraight").textContent = t.curveStraight;
+  document.getElementById("curveSmooth").textContent = t.curveSmooth;
   document.getElementById("btnVi").classList.toggle("active", lang==="vi");
   document.getElementById("btnEn").classList.toggle("active", lang==="en");
   document.documentElement.lang = lang;
@@ -841,7 +962,8 @@ loadGraph();
 rebuildGraph();
 rebuildJunctionDots();
 Object.keys(NODES).forEach(updateVertexDotPos);
-if(isAdmin){ document.getElementById("adminToggleBtn").style.display = "block"; }
+applyStyle();
+if(isAdmin){ document.getElementById("adminToggleBtn").style.display = "block"; syncStyleControls(); }
 setMode("real");
 applyLang();
 clearOverlay();
