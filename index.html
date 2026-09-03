@@ -354,44 +354,682 @@ const isAdmin = new URLSearchParams(location.search).get("admin") === "1";
 
 /* ============ 1. Điểm có tên (POI) — cố định, có nhãn VI/EN ============ */
 const NODES = {
-  entrance:  {vi:"Lối vào",               en:"Entrance",                num:"",   x:93.4, y:13.3},
-  parking:   {vi:"Bãi đỗ xe",             en:"Parking",                 num:"",   x:80.8, y:9.6},
-  lobby:     {vi:"1. Quầy lễ tân",        en:"1. Reception",            num:"1",  x:79.0, y:22.2},
-  spa:       {vi:"7. Fit & Spa",          en:"7. Fit & Spa",            num:"7",  x:69.8, y:22.8},
-  kidsclub:  {vi:"4. CLB trẻ em",         en:"4. Kids Club",            num:"4",  x:70.1, y:14.1},
-  bar1:      {vi:"2. Lighthouse Bar",     en:"2. Lighthouse Bar",       num:"2",  x:72.5, y:28.1},
-  seastars:  {vi:"6. NH Sea Stars",       en:"6. Sea Stars Restaurant", num:"6",  x:69.8, y:38.2},
-  saltpepper:{vi:"3. NH Salt 'N' Pepper", en:"3. Salt 'N' Pepper",      num:"3",  x:74.2, y:40.6},
-  madcow:    {vi:"5. NH Mad Cow",         en:"5. Mad Cow Restaurant",   num:"5",  x:78.2, y:42.4},
-  meeting:   {vi:"13. Phòng hội nghị",    en:"13. Conference Room",     num:"13", x:83.1, y:39.6},
-  tennis:    {vi:"12. Sân quần vợt",      en:"12. Sports Courts",       num:"12", x:89.5, y:35.0},
-  pool:      {vi:"8. Coconutz Bar / Hồ bơi", en:"8. Coconutz Bar / Pool", num:"8", x:52.3, y:33.9},
-  eastwing:  {vi:"Tòa Đông",              en:"East Wing",               num:"",   x:65.4, y:22.8},
-  westwing:  {vi:"Tòa Tây",               en:"West Wing",               num:"",   x:43.1, y:22.8},
-  splash:    {vi:"10. Splashing Hub",     en:"10. Splashing Hub",       num:"10", x:40.0, y:34.0},
-  beach:     {vi:"11. Beach House",       en:"11. Beach House",         num:"11", x:20.4, y:33.2},
-  waterpark: {vi:"9. Công viên nước",     en:"9. Water Park",           num:"9",  x:45.4, y:44.3},
-  southwing: {vi:"Tòa Nam",               en:"South Wing",              num:"",   x:56.2, y:50.9},
+  "entrance": {
+    "vi": "Lối vào",
+    "en": "Entrance",
+    "num": "0",
+    "x": 93.4,
+    "y": 13.3
+  },
+  "parking": {
+    "vi": "Bãi đỗ xe",
+    "en": "Parking",
+    "num": "",
+    "x": 79.82441380528425,
+    "y": 9.709310573399469
+  },
+  "lobby": {
+    "vi": "1. Quầy lễ tân",
+    "en": "1. Reception",
+    "num": "1",
+    "x": 78.98156063089881,
+    "y": 22.323967581091036
+  },
+  "spa": {
+    "vi": "7. Fit & Spa",
+    "en": "7. Fit & Spa",
+    "num": "7",
+    "x": 70.27217071238476,
+    "y": 22.72127533148796
+  },
+  "kidsclub": {
+    "vi": "4. CLB trẻ em",
+    "en": "4. Kids Club",
+    "num": "4",
+    "x": 69.9912267991385,
+    "y": 14.37772542473298
+  },
+  "bar1": {
+    "vi": "2. Lighthouse Bar",
+    "en": "2. Lighthouse Bar",
+    "num": "2",
+    "x": 71.74715305023595,
+    "y": 28.581625748462834
+  },
+  "seastars": {
+    "vi": "6. NH Sea Stars",
+    "en": "6. Sea Stars Restaurant",
+    "num": "6",
+    "x": 68.58648579826053,
+    "y": 38.91173714157276
+  },
+  "saltpepper": {
+    "vi": "3. NH Salt 'N' Pepper",
+    "en": "3. Salt 'N' Pepper",
+    "num": "3",
+    "x": 73.36259662738696,
+    "y": 42.09023135177278
+  },
+  "madcow": {
+    "vi": "5. NH Mad Cow",
+    "en": "5. Mad Cow Restaurant",
+    "num": "5",
+    "x": 77.7173023039673,
+    "y": 42.78552796672355
+  },
+  "meeting": {
+    "vi": "13. Phòng hội nghị",
+    "en": "13. Conference Room",
+    "num": "13",
+    "x": 82.91483972028644,
+    "y": 41.196281808888976
+  },
+  "tennis": {
+    "vi": "12. Sân quần vợt",
+    "en": "12. Sports Courts",
+    "num": "12",
+    "x": 89.0254609306409,
+    "y": 37.12383237221257
+  },
+  "pool": {
+    "vi": "8. Coconutz Bar / Hồ bơi",
+    "en": "8. Coconutz Bar / Pool",
+    "num": "8",
+    "x": 55.59262618147772,
+    "y": 34.342649701471196
+  },
+  "eastwing": {
+    "vi": "Tòa Đông",
+    "en": "East Wing",
+    "num": "",
+    "x": 65.4,
+    "y": 22.8
+  },
+  "westwing": {
+    "vi": "Tòa Tây",
+    "en": "West Wing",
+    "num": "",
+    "x": 43.58209169570347,
+    "y": 25.60178636072671
+  },
+  "splash": {
+    "vi": "10. Splashing Hub",
+    "en": "10. Splashing Hub",
+    "num": "10",
+    "x": 39.50834064969271,
+    "y": 34.83928959942722
+  },
+  "beach": {
+    "vi": "11. Beach House",
+    "en": "11. Beach House",
+    "num": "11",
+    "x": 20.614573116151778,
+    "y": 32.15743339265236
+  },
+  "waterpark": {
+    "vi": "9. Công viên nước",
+    "en": "9. Water Park",
+    "num": "9",
+    "x": 45.4,
+    "y": 44.3
+  },
+  "southwing": {
+    "vi": "Tòa Nam",
+    "en": "South Wing",
+    "num": "",
+    "x": 56.2,
+    "y": 50.9
+  }
 };
-let poiSeq = 0;
 
-/* ============ 2. Sơ đồ đường đi (khung đồ thị) do quản trị tự vẽ ============
-   JUNCTIONS: điểm nối tự do không tên, do công cụ tạo ra khi vẽ chuỗi — {id:{x,y}}
-   GRAPH_EDGES: danh sách liên kết [idA, idB] — idA/idB có thể là điểm có tên hoặc điểm nối tự do
-   NODES (ở trên) cũng được công cụ quản trị chỉnh trực tiếp: di chuyển, đổi tên/STT, hoặc thêm điểm mới.
-   Dán đè cả 4 biến (NODES / JUNCTIONS / GRAPH_EDGES / MARKER_STYLE) bằng đoạn mã xuất ra từ nút
-   "Xuất mã" để publish cho mọi khách. */
-const JUNCTIONS = {};
-const GRAPH_EDGES = [];
-const NODES_DEFAULT = JSON.parse(JSON.stringify(NODES)); // bản gốc, dùng để tham chiếu khi cần
+const JUNCTIONS = {
+  "j1": {
+    "x": 43.63476733977173,
+    "y": 25.82527469371309
+  },
+  "j2": {
+    "x": 84.81123792800702,
+    "y": 15.519996811125655
+  },
+  "j3": {
+    "x": 82.08955223880598,
+    "y": 16.26495665805969
+  },
+  "j4": {
+    "x": 81.21158911325725,
+    "y": 19.493115994773824
+  },
+  "j5": {
+    "x": 82.08955223880598,
+    "y": 22.96959528046597
+  },
+  "j6": {
+    "x": 83.75768217734854,
+    "y": 25.949434668202098
+  },
+  "j7": {
+    "x": 83.66988586479368,
+    "y": 28.80511408144922
+  },
+  "j8": {
+    "x": 85.77699736611062,
+    "y": 31.16415359674032
+  },
+  "j9": {
+    "x": 85.60140474100088,
+    "y": 35.6339126783445
+  },
+  "j10": {
+    "x": 82.44073748902547,
+    "y": 35.6339126783445
+  },
+  "j11": {
+    "x": 81.38718173836699,
+    "y": 32.778233265097384
+  },
+  "j12": {
+    "x": 78.84108867427568,
+    "y": 27.191034413092147
+  },
+  "j13": {
+    "x": 78.84108867427568,
+    "y": 30.667513698784294
+  },
+  "j14": {
+    "x": 72.25636523266023,
+    "y": 11.546877627477487
+  },
+  "j15": {
+    "x": 66.900790166813,
+    "y": 13.03679732134555
+  },
+  "j16": {
+    "x": 62.071992976295,
+    "y": 14.775036964191624
+  },
+  "j17": {
+    "x": 65.32045654082529,
+    "y": 18.375676224372775
+  },
+  "j18": {
+    "x": 63.38893766461808,
+    "y": 43.95263096910785
+  },
+  "j19": {
+    "x": 57.06760316066726,
+    "y": 47.553270229289005
+  },
+  "j20": {
+    "x": 43.98595258999122,
+    "y": 40.351991708926704
+  },
+  "j21": {
+    "x": 39.94732221246708,
+    "y": 37.9929521936356
+  },
+  "j22": {
+    "x": 43.459174714661984,
+    "y": 31.16415359674032
+  },
+  "j23": {
+    "x": 45.12730465320456,
+    "y": 35.882232627322516
+  },
+  "j24": {
+    "x": 46.44424934152765,
+    "y": 27.315194387581155
+  },
+  "j25": {
+    "x": 49.86830553116769,
+    "y": 27.191034413092147
+  },
+  "j26": {
+    "x": 53.73134328358209,
+    "y": 27.315194387581155
+  },
+  "j27": {
+    "x": 56.628621597892895,
+    "y": 30.046713826339268
+  },
+  "j28": {
+    "x": 58.47234416154522,
+    "y": 19.493115994773824
+  },
+  "j29": {
+    "x": 54.521510096575945,
+    "y": 17.754876351927752
+  },
+  "j30": {
+    "x": 48.90254609306409,
+    "y": 18.25151624988377
+  },
+  "j31": {
+    "x": 40.56189640035118,
+    "y": 19.741435943751835
+  },
+  "j32": {
+    "x": 34.76733977172959,
+    "y": 21.727995535575918
+  },
+  "j33": {
+    "x": 28.797190517998246,
+    "y": 23.093755254954974
+  },
+  "j34": {
+    "x": 24.40737489025461,
+    "y": 24.087035050867016
+  },
+  "j35": {
+    "x": 21.51009657594381,
+    "y": 26.19775461718011
+  },
+  "j36": {
+    "x": 25.37313432835821,
+    "y": 29.17759400491623
+  },
+  "j37": {
+    "x": 27.831431079894642,
+    "y": 31.16415359674032
+  },
+  "j38": {
+    "x": 29.499561018437227,
+    "y": 34.268152958965445
+  },
+  "j39": {
+    "x": 28.35820895522388,
+    "y": 37.12383237221257
+  },
+  "j40": {
+    "x": 30.553116769095702,
+    "y": 43.58015104564084
+  },
+  "j41": {
+    "x": 22.651448639157156,
+    "y": 44.200950918085866
+  },
+  "j42": {
+    "x": 34.32835820895522,
+    "y": 43.33183109666283
+  },
+  "j43": {
+    "x": 33.4503950834065,
+    "y": 47.18079030582199
+  },
+  "j44": {
+    "x": 33.53819139596137,
+    "y": 50.40894964253613
+  }
+};
 
-/* 1 đơn vị bản đồ (hệ tọa độ % chuẩn hóa 0-1000) ứng với bao nhiêu mét thật.
-   Chỉnh DUY NHẤT con số này nếu quãng đường hiển thị chưa đúng tỉ lệ thực tế. */
-const METERS_PER_UNIT = 0.9;
+const GRAPH_EDGES = [
+  [
+    "westwing",
+    "j1"
+  ],
+  [
+    "j1",
+    "westwing"
+  ],
+  [
+    "entrance",
+    "j2"
+  ],
+  [
+    "j2",
+    "j3"
+  ],
+  [
+    "j3",
+    "parking"
+  ],
+  [
+    "parking",
+    "j3"
+  ],
+  [
+    "j3",
+    "j4"
+  ],
+  [
+    "j4",
+    "lobby"
+  ],
+  [
+    "lobby",
+    "j4"
+  ],
+  [
+    "j4",
+    "j5"
+  ],
+  [
+    "j5",
+    "j6"
+  ],
+  [
+    "j6",
+    "j7"
+  ],
+  [
+    "j7",
+    "j8"
+  ],
+  [
+    "j8",
+    "j9"
+  ],
+  [
+    "j9",
+    "tennis"
+  ],
+  [
+    "tennis",
+    "j9"
+  ],
+  [
+    "j9",
+    "meeting"
+  ],
+  [
+    "meeting",
+    "j9"
+  ],
+  [
+    "j9",
+    "j10"
+  ],
+  [
+    "j10",
+    "j11"
+  ],
+  [
+    "j11",
+    "j7"
+  ],
+  [
+    "lobby",
+    "j12"
+  ],
+  [
+    "j12",
+    "j13"
+  ],
+  [
+    "j13",
+    "j11"
+  ],
+  [
+    "parking",
+    "j14"
+  ],
+  [
+    "j14",
+    "kidsclub"
+  ],
+  [
+    "kidsclub",
+    "j14"
+  ],
+  [
+    "j14",
+    "j15"
+  ],
+  [
+    "j15",
+    "kidsclub"
+  ],
+  [
+    "kidsclub",
+    "j15"
+  ],
+  [
+    "j15",
+    "j16"
+  ],
+  [
+    "j16",
+    "j17"
+  ],
+  [
+    "j17",
+    "eastwing"
+  ],
+  [
+    "eastwing",
+    "j17"
+  ],
+  [
+    "j17",
+    "spa"
+  ],
+  [
+    "spa",
+    "bar1"
+  ],
+  [
+    "bar1",
+    "seastars"
+  ],
+  [
+    "seastars",
+    "bar1"
+  ],
+  [
+    "bar1",
+    "saltpepper"
+  ],
+  [
+    "bar1",
+    "j13"
+  ],
+  [
+    "j13",
+    "lobby"
+  ],
+  [
+    "lobby",
+    "bar1"
+  ],
+  [
+    "bar1",
+    "spa"
+  ],
+  [
+    "spa",
+    "lobby"
+  ],
+  [
+    "seastars",
+    "j18"
+  ],
+  [
+    "j18",
+    "j19"
+  ],
+  [
+    "j19",
+    "southwing"
+  ],
+  [
+    "southwing",
+    "j19"
+  ],
+  [
+    "j19",
+    "j20"
+  ],
+  [
+    "j20",
+    "waterpark"
+  ],
+  [
+    "waterpark",
+    "j20"
+  ],
+  [
+    "j20",
+    "j21"
+  ],
+  [
+    "j21",
+    "splash"
+  ],
+  [
+    "splash",
+    "j22"
+  ],
+  [
+    "j22",
+    "j23"
+  ],
+  [
+    "j23",
+    "j20"
+  ],
+  [
+    "j20",
+    "j22"
+  ],
+  [
+    "j22",
+    "j24"
+  ],
+  [
+    "j24",
+    "j25"
+  ],
+  [
+    "j25",
+    "j26"
+  ],
+  [
+    "j26",
+    "j27"
+  ],
+  [
+    "j27",
+    "pool"
+  ],
+  [
+    "pool",
+    "j27"
+  ],
+  [
+    "j27",
+    "j28"
+  ],
+  [
+    "j28",
+    "j29"
+  ],
+  [
+    "j29",
+    "j30"
+  ],
+  [
+    "j30",
+    "j31"
+  ],
+  [
+    "j31",
+    "westwing"
+  ],
+  [
+    "westwing",
+    "j31"
+  ],
+  [
+    "j31",
+    "j32"
+  ],
+  [
+    "j32",
+    "j33"
+  ],
+  [
+    "j33",
+    "j34"
+  ],
+  [
+    "j34",
+    "j35"
+  ],
+  [
+    "j35",
+    "beach"
+  ],
+  [
+    "j34",
+    "j36"
+  ],
+  [
+    "j36",
+    "j37"
+  ],
+  [
+    "j37",
+    "j38"
+  ],
+  [
+    "j38",
+    "j39"
+  ],
+  [
+    "j39",
+    "j40"
+  ],
+  [
+    "j40",
+    "j41"
+  ],
+  [
+    "j41",
+    "beach"
+  ],
+  [
+    "beach",
+    "j41"
+  ],
+  [
+    "j41",
+    "j40"
+  ],
+  [
+    "j40",
+    "j42"
+  ],
+  [
+    "j42",
+    "j21"
+  ],
+  [
+    "j21",
+    "j42"
+  ],
+  [
+    "j42",
+    "j43"
+  ],
+  [
+    "j43",
+    "j44"
+  ],
+  [
+    "saltpepper",
+    "madcow"
+  ],
+  [
+    "j16",
+    "j29"
+  ]
+];
 
-/* Kiểu hiển thị các chấm tròn trên bản đồ, áp dụng CHUNG cho tất cả — chỉnh qua panel
-   quản trị rồi "Xuất mã" để dán đè giá trị mặc định này. */
-const MARKER_STYLE = { size: 24, borderColor: "#1f3b2f", blink: false, curved: true };
+const MARKER_STYLE = {
+  "size": 24,
+  "borderColor": "#ff7300",
+  "blink": false,
+  "curved": true
+};
 
 function vertexPos(id){ return JUNCTIONS[id] || NODES[id]; }
 function isPOI(id){ return !!NODES[id]; }
